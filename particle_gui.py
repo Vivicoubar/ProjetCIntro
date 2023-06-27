@@ -12,7 +12,7 @@ from ctypes import *
 
 # Load the shared library into ctypes
 if sys.platform == 'win32':
-  libname = os.path.join(pathlib.Path().absolute(), "libparticle.dll")
+  libname = os.path.join(pathlib.Path().absolute(), "libparticle.so")
 else : 
   libname = os.path.join(pathlib.Path().absolute(), "libparticle.so")
 c_lib = ctypes.CDLL(libname)
@@ -56,8 +56,8 @@ class ParticleUI :
         self.height = 1000
 
         # physical simulation will work in [-world_x_max,world_x_max] x [-world_y_max,world_y_max]
-        self.world_x_max = 10 
-        self.world_y_max = 10 
+        self.world_x_max = 10
+        self.world_y_max = 10
         # WARNING : the mappings assume world bounding box and canvas have the same ratio !
 
         self.window = Tk()

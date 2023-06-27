@@ -85,6 +85,34 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
 
 void applyExternalForce(Context* context, float dt)
 {
+  float unity_factor = 200.0F;
+  float g = 9.81F * unity_factor;
+  float dv = -g * dt; // dv = -g*dt
+  float dy = dv * dt; // d = dv*dt
+
+  for (int i = 0; i < context->num_particles; i++) {
+    context->particles[i].velocity.y += dv;
+    context->particles[i].position.y += dy;
+  }
+
+
+  /*
+  update Velocity
+    v_i+1 = v_i + dt/m * F_ext(...)
+  expected position
+    p_i+1 = p_i + dt * v_i+1
+  constraint(end contact)
+  update Velocity And Position
+     v_i+1 = 1/dt * (p_i+1 - p_i)
+     p_i+1 -> position = new_pos
+
+  
+  CONTACT :
+      
+  
+  
+  
+  */
 }
 
 void dampVelocities(Context* context)
@@ -93,6 +121,9 @@ void dampVelocities(Context* context)
 
 void updateExpectedPosition(Context* context, float dt)
 {
+  for (int i = 0; i < context->num_particles; i++) {
+    context->particles[i].next_pos.y += context->particles[i].velocity.y*dt;
+  }
 }
 
 void addDynamicContactConstraints(Context* context)
@@ -109,6 +140,9 @@ void projectConstraints(Context* context)
 
 void updateVelocityAndPosition(Context* context, float dt)
 {
+  for (int i = 0; i < context->num_particles; i++) {
+    context->particles[i].velocity.y = (context->particles[i].next_pos.y - context->particles[i].position.y)/dt;
+  }
 }
 
 void applyFriction(Context* context)
