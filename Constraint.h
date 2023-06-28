@@ -8,6 +8,15 @@ typedef struct SphereCollider {
   float radius;
 } SphereCollider;
 
+typedef struct PlaneCollider {
+  Vec2 start_pos;
+  Vec2 director;
+} PlaneCollider;
+
+
+
+
+
 // ------------------------------------------------
 
 #endif

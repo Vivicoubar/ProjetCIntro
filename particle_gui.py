@@ -27,12 +27,27 @@ class PARTICLE(Structure):
                 ("radius",   c_float),
                 ("solid_id", c_int),
                 ("draw_id",  c_int)]
+    
+class SPHERE_COLLIDER(Structure):
+    _fields_ = [("center",c_float*2),
+                ("radius", c_float)]
+
+class PLANE_COLLIDER(Structure):
+    _fields_ = [("start_pos", c_float*2),
+               ("director", c_float*2)]
+    
+class GROUND_CONSTRAINT(Structure):
+    _fields_ = [("constraint", c_float*2)]
 
 class CONTEXT(Structure):
     _fields_ = [("num_particles", c_int),
                 ("capacity_particles", c_int),
-                ("particles", POINTER(PARTICLE) ),
-                ("num_ground_sphere", c_int) ]
+                ("particles", ctypes.POINTER(PARTICLE)),
+                ("num_ground_sphere", c_int),
+                ("ground_spheres", ctypes.POINTER(SPHERE_COLLIDER)),
+                ("num_ground_plane", c_int),
+                ("ground_planes", ctypes.POINTER(PLANE_COLLIDER))
+                ]
 
 # ("pos", c_float*2) => fixed size array of two float
 
@@ -40,6 +55,9 @@ class CONTEXT(Structure):
 # Declare proper return types for methods (otherwise considered as c_int)
 c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeContext is Context*
 c_lib.getParticle.restype = PARTICLE
+c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
+c_lib.getGroundPlaneCollider.restype = PLANE_COLLIDER
+c_lib.getGroundConstraint.restype = POINTER(GROUND_CONSTRAINT);
 # WARNING : python parameter should be explicitly converted to proper c_type of not integer.
 # If we already have a c_type (including the one deriving from Structure above)
 # then the parameter can be passed as is.
@@ -52,6 +70,7 @@ class ParticleUI :
     def __init__(self) :
         # create drawing context
         self.context = c_lib.initializeContext(200)
+        self.
         self.width = 1000
         self.height = 1000
 
@@ -65,13 +84,25 @@ class ParticleUI :
         # create simulation context...
         self.canvas = Canvas(self.window,width=self.width,height=self.height)
         self.canvas.pack()
-
         # Initialize drawing, only needed if the context is initialized with elements,
+        for i in range(self.context.contents.num_ground_sphere):
+            sphere = c_lib.getGroundSphereCollider(self.context, i)
+            draw_id = self.canvas.create_oval(*self.worldToView( (sphere.center[0]-sphere.radius,sphere.center[1]-sphere.radius) ),
+                                              *self.worldToView( (sphere.center[0]+sphere.radius,sphere.center[1]+sphere.radius) ),
+                                              fill="blue") 
+            
+        for i in range(self.context.contents.num_ground_plane):
+            plane = c_lib.getGroundPlaneCollider(self.context, i)
+            x0 , y0 = plane.start_pos[0], plane.start_pos[1]
+            x1 ,y1= x0*plane.director[0], y0*plane.director[1]
+            draw_id = self.canvas.create_line(*self.worldToView( (x0,y0)),
+                                              *self.worldToView((x1,y1)),
+                                              fill="black", width=3) 
         # otherwise, see addParticle
         for i in range(self.context.contents.num_particles):
             sphere = c_lib.getParticle(self.context, i)
             draw_id = self.canvas.create_oval(*self.worldToView( (sphere.position[0]-sphere.radius,sphere.position[1]-sphere.radius) ),
-                                              *self.worldToView( (sphere.position[0]-sphere.radius,sphere.position[1]-sphere.radius) ),
+                                              *self.worldToView( (sphere.position[0]+sphere.radius,sphere.position[1]+sphere.radius) ),
                                               fill="orange")
             c_lib.setDrawId(self.context, i, draw_id) 
         

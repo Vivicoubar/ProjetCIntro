@@ -10,10 +10,10 @@ typedef struct Vec2 {
 
 // ------------------------------------------------
 
-Vec2 multiplyByScalar(Vec2 vector, int scalar);
+Vec2 multiplyByScalar(Vec2 vector, float scalar);
 Vec2 sumVector(Vec2 vector1, Vec2 vector2);
 Vec2 substractVector(Vec2 vector1, Vec2 vector2);
-int scalarProduct(Vec2 vector1, Vec2 vector2);
+float scalarProduct(Vec2 vector1, Vec2 vector2);
 Vec2 normalize(Vec2 vector);
 
 // ------------------------------------------------
