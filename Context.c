@@ -28,6 +28,15 @@ void addParticle(Context* context, float x, float y, float radius, float mass, i
     context->num_particles += 1;
 }
 
+void addGroundConstraint(Context* context, Vec2 constraint, int origin) {
+  //Each constraint is a Vec (the movement), and an origin (the num of the particle where the constraint should be applied) 
+  assert(context->ground_constraints->num_constraint < context->ground_constraints->capacity_constraints);
+  GroundConstraint* ground_constraints = context->ground_constraints;
+  ground_constraints->constraints[ground_constraints->num_constraint].constraint = constraint;
+  ground_constraints->constraints[ground_constraints->num_constraint].origin = origin;
+  ground_constraints->num_constraint +=1;
+}
+
 // ------------------------------------------------
 
 void setDrawId(Context* context, int sphere_id, int draw_id)
@@ -48,7 +57,6 @@ PlaneCollider getGroundPlaneCollider(Context* context, int id)
 {
   return context->ground_planes[id];
 }
-
 // ------------------------------------------------
 Context* initializeContext(int capacity)
 {
@@ -73,16 +81,18 @@ Context* initializeContext(int capacity)
   context->num_ground_plane = 1;
   context->ground_planes = malloc(context-> num_ground_plane*sizeof(PlaneCollider));
   Vec2 pstart = {-20.0f, -5.0f};
-  Vec2 pend = {-4.0f, 1.0};
+  Vec2 director = {-4.0f, 1.0};
   context->ground_planes[0].start_pos = pstart;
-  context->ground_planes[0].director = pend;
-  
-
+  context->ground_planes[0].director = director;
+  context->ground_constraints = initializeGroundConstraint(capacity*100);
   return context;
 }
 
 GroundConstraint* initializeGroundConstraint(int capacity) {
   GroundConstraint* constraint = malloc(sizeof(GroundConstraint));
+  constraint->num_constraint = 0;
+  constraint->capacity_constraints = 200*sizeof(constraint->constraints);
+  constraint->constraints = malloc(capacity*sizeof(constraint->constraints));
   return constraint;
 }
 
@@ -97,12 +107,12 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
   addStaticContactConstraints(context);
 
  
-  for(int k=0; k<num_constraint_relaxation; ++k) {
-    projectConstraints(context);
+  for(int k=0; k<num_constraint_relaxation; ++k) { //// V -> Applied once for now, see particle.gui 
+    projectConstraints(context); 
   }
 
   updateVelocityAndPosition(context, dt);
-  applyFriction(context);
+  applyFriction(context,dt);
 
   deleteContactConstraints(context);
 }
@@ -146,6 +156,10 @@ void addStaticContactConstraints(Context* context)
 
 void projectConstraints(Context* context)
 {
+  for(int i = 0; i < context->ground_constraints->num_constraint; i++) {
+    GroundConstraint* ground_constraints = context->ground_constraints;
+    context->particles[ground_constraints->constraints[i].origin].next_pos = sumVector(context->particles[ground_constraints->constraints[i].origin].next_pos, ground_constraints->constraints[i].constraint);
+  }
 }
 
 void updateVelocityAndPosition(Context* context, float dt)
@@ -161,27 +175,33 @@ void updateVelocityAndPosition(Context* context, float dt)
 
 }
 
-void applyFriction(Context* context)
+void applyFriction(Context* context, float dt)
 {
+  for(int i=0; i<context->num_particles; i++) {
+    //Apply a constraint for the friction
+    context->particles[i].position = substractVector(context->particles[i].position, multiplyByScalar(context->particles[i].velocity, 0.2*dt));
+  }
 }
 
 void deleteContactConstraints(Context* context)
 {
+  context->ground_constraints->num_constraint = 0;
 }
 
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider) {
   Vec2 pos_particle = context->particles[particle_id].position;
   Vec2 pos_plane = collider->start_pos;
   Vec2 director = collider->director;
-  Vec2 normal_c = {-director.y, director.x};
-  normal_c = normalize(normal_c);
+  Vec2 normal_c = {--director.y, -director.x};//Should be towards the top
+  normal_c = normalize(normal_c); 
   float scalar_proj_qc = scalarProduct(substractVector(pos_particle, pos_plane), normal_c);
   Vec2 q_c = substractVector(pos_particle,multiplyByScalar(normal_c, scalar_proj_qc));
   float scalar_proj_c = scalarProduct(substractVector(pos_particle, q_c), normal_c);
   
   float c = scalar_proj_c - context->particles[particle_id].radius;
+  
   if(c < 0.0F) {
-    //context->particles[particle_id].next_pos = substractVector(context->particles[particle_id].next_pos ,multiplyByScalar(normal_c,c));
+    addGroundConstraint(context, multiplyByScalar(normal_c,-c), particle_id);
   }
 }
 

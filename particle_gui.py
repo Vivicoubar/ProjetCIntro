@@ -57,7 +57,7 @@ c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeCo
 c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
 c_lib.getGroundPlaneCollider.restype = PLANE_COLLIDER
-c_lib.getGroundConstraint.restype = POINTER(GROUND_CONSTRAINT);
+c_lib.initializeGroundConstraint.restype = POINTER(GROUND_CONSTRAINT)
 # WARNING : python parameter should be explicitly converted to proper c_type of not integer.
 # If we already have a c_type (including the one deriving from Structure above)
 # then the parameter can be passed as is.
@@ -70,7 +70,7 @@ class ParticleUI :
     def __init__(self) :
         # create drawing context
         self.context = c_lib.initializeContext(200)
-        self.
+        self.ground_constraint = c_lib.initializeGroundConstraint(300)
         self.width = 1000
         self.height = 1000
 

@@ -6,6 +6,23 @@
 
 // ------------------------------------------------
 
+typedef struct Constraint {
+  
+  Vec2 constraint;
+  int origin;
+
+} Constraint;
+
+typedef struct GroundConstraint {
+
+  int num_constraint;
+  Constraint* constraints;
+  int capacity_constraints;
+  int origin;
+
+} GroundConstraint;
+
+
 typedef struct Context {
   int num_particles;
   int capacity_particles;
@@ -18,19 +35,15 @@ typedef struct Context {
   //Plane colliders
   int num_ground_plane;
   PlaneCollider* ground_planes;
+
+  //Constraints
+  GroundConstraint* ground_constraints;
   
 } Context;
 
 // --------------------------------------------------
 
 Context* initializeContext(int capacity);
-
-
-typedef struct GroundConstraint {
-
-  Vec2 constraint;
-
-} GroundConstraint;
 
 
 GroundConstraint* initializeGroundConstraint(int capacity);
@@ -70,7 +83,7 @@ void addDynamicContactConstraints(Context* context);
 void addStaticContactConstraints(Context* context);
 void projectConstraints(Context* context);
 void updateVelocityAndPosition(Context* context, float dt);
-void applyFriction(Context* context);
+void applyFriction(Context* context, float );
 void deleteContactConstraints(Context* context);
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider);
 void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider);
