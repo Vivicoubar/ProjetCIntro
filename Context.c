@@ -149,7 +149,9 @@ void addStaticContactConstraints(Context* context)
   for (int i = 0; i < context->num_particles; i++) {
     for(int j = 0; j < context->num_ground_plane; j++) {
       checkContactWithPlane(context, i, &(context->ground_planes[j]));
-      
+    }
+    for(int j=0; j < context->num_ground_sphere; j++) {
+      checkContactWithSphere(context, i, &(context->ground_spheres[j]));
     }
   }
 }
@@ -179,7 +181,7 @@ void applyFriction(Context* context, float dt)
 {
   for(int i=0; i<context->num_particles; i++) {
     //Apply a constraint for the friction
-    context->particles[i].position = substractVector(context->particles[i].position, multiplyByScalar(context->particles[i].velocity, 0.2*dt));
+    context->particles[i].velocity = substractVector(context->particles[i].velocity, multiplyByScalar(context->particles[i].velocity, 0.6*dt));
   }
 }
 
@@ -209,10 +211,14 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
   Vec2 pos_particle = context->particles[particle_id].position;
   Vec2 center = collider->center;
   float radius = collider->radius;
-  Vec2 normal = substractVector(pos_particle, center);
-  normal = normalize(normal);
-  Vec2 pos_plane = sumVector(center, multiplyByScalar(normal, radius));
-  Vec2 director = {normal.y, -normal.x};
+  float sdf = scalarProduct(substractVector(pos_particle,center),substractVector(pos_particle,center)) - radius;
+  if(sdf < 0) {
+    Vec2 normal = substractVector(pos_particle, center);
+    normal = normalize(normal);
+    addGroundConstraint(context, multiplyByScalar(normal, -sdf), particle_id);
+  }
+
+
 
   
 }
