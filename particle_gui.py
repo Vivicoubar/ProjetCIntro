@@ -31,13 +31,26 @@ class PARTICLE(Structure):
 class SPHERE_COLLIDER(Structure):
     _fields_ = [("center",c_float*2),
                 ("radius", c_float)]
+    
+
+class CONSTRAINT(Structure):
+    _fields_ = [("constraint", c_float*2),
+                ("origin",c_int)]
+
 
 class PLANE_COLLIDER(Structure):
     _fields_ = [("start_pos", c_float*2),
                ("director", c_float*2)]
     
 class GROUND_CONSTRAINT(Structure):
-    _fields_ = [("constraint", c_float*2)]
+    _fields_ = [("num_constraint", c_int),
+                ("constraint", ctypes.POINTER(CONSTRAINT)),
+                ("capacity_constraints",c_int)]
+
+class PARTICLE_CONSTRAINT(Structure):
+    _fields_ = [("num_constraint", c_int),
+                ("constraint", ctypes.POINTER(CONSTRAINT)),
+                ("capacity_constraints",c_int)]
 
 class CONTEXT(Structure):
     _fields_ = [("num_particles", c_int),
@@ -46,8 +59,23 @@ class CONTEXT(Structure):
                 ("num_ground_sphere", c_int),
                 ("ground_spheres", ctypes.POINTER(SPHERE_COLLIDER)),
                 ("num_ground_plane", c_int),
-                ("ground_planes", ctypes.POINTER(PLANE_COLLIDER))
-                ]
+                ("ground_planes", ctypes.POINTER(PLANE_COLLIDER)),
+                ("ground_constraints", ctypes.POINTER(GROUND_CONSTRAINT)),
+                ("particle_constraints", ctypes.POINTER(PARTICLE_CONSTRAINT))]
+    
+class BOUNDS(Structure):
+    _fields_ = [("particle1", c_int),
+                ("particle2", c_int),
+                ("target_distance", c_float),
+                ("stiffness", c_float)]
+
+class BOUNDS_CONSTRAINTS(Structure):
+    _fields_ = [("num_bounds", c_int),
+                ("bounds", ctypes.POINTER(BOUNDS)),
+                ("capacity_bounds", c_int),
+                ("num_constraints", c_int),
+                ("constraints", ctypes.POINTER(CONSTRAINT)),
+                ("capacity_constraints", c_int)]
 
 # ("pos", c_float*2) => fixed size array of two float
 
@@ -58,6 +86,8 @@ c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
 c_lib.getGroundPlaneCollider.restype = PLANE_COLLIDER
 c_lib.initializeGroundConstraint.restype = POINTER(GROUND_CONSTRAINT)
+c_lib.initializeBoundsConstraint.restype = POINTER(BOUNDS_CONSTRAINTS)
+c_lib.initializeParticleConstraint.restype = POINTER(PARTICLE_CONSTRAINT)
 # WARNING : python parameter should be explicitly converted to proper c_type of not integer.
 # If we already have a c_type (including the one deriving from Structure above)
 # then the parameter can be passed as is.
@@ -71,6 +101,8 @@ class ParticleUI :
         # create drawing context
         self.context = c_lib.initializeContext(200)
         self.ground_constraint = c_lib.initializeGroundConstraint(300)
+        self.particle_constraint = c_lib.initializeParticleConstraint(300)
+        self.bounds_constraint = c_lib.initializeBoundsConstraint(300)
         self.width = 1000
         self.height = 1000
 
@@ -84,6 +116,9 @@ class ParticleUI :
         # create simulation context...
         self.canvas = Canvas(self.window,width=self.width,height=self.height)
         self.canvas.pack()
+
+        # create grid
+        self.createGridWithSubdivisions(1.0, 5)
         # Initialize drawing, only needed if the context is initialized with elements,
         for i in range(self.context.contents.num_ground_sphere):
             sphere = c_lib.getGroundSphereCollider(self.context, i)
@@ -94,10 +129,11 @@ class ParticleUI :
         for i in range(self.context.contents.num_ground_plane):
             plane = c_lib.getGroundPlaneCollider(self.context, i)
             x0 , y0 = plane.start_pos[0], plane.start_pos[1]
-            x1 ,y1= x0*plane.director[0], y0*plane.director[1]
+            x1 ,y1= x0+plane.director[0], y0+plane.director[1]
             draw_id = self.canvas.create_line(*self.worldToView( (x0,y0)),
                                               *self.worldToView((x1,y1)),
                                               fill="black", width=3) 
+
         # otherwise, see addParticle
         for i in range(self.context.contents.num_particles):
             sphere = c_lib.getParticle(self.context, i)
@@ -108,6 +144,7 @@ class ParticleUI :
         
         # Initialize Mouse and Key events
         self.canvas.bind("<Button-1>", lambda event: self.mouseCallback(event))
+        self.canvas.bind("<Button-2>", lambda event: self.mouseCallback2(event))
         self.window.bind("<Key>", lambda event: self.keyCallback(event)) # bind all key
         self.window.bind("<Escape>", lambda event: self.enterCallback(event)) 
         # bind specific key overide default binding
@@ -124,7 +161,7 @@ class ParticleUI :
         """ animation loop """
         # APPLY PHYSICAL UPDATES HERE !
         for i in range(6) :
-            c_lib.updatePhysicalSystem(self.context, c_float(0.016/float(6)), 1) #TODO can be called more than once..., just devise dt
+            c_lib.updatePhysicalSystem(self.context, c_float(0.016/float(6)), 1)
             
         for i in range(self.context.contents.num_particles):
             sphere = c_lib.getParticle(self.context, i)
@@ -153,16 +190,76 @@ class ParticleUI :
                         c_float(x_world), c_float(y_world), 
                         c_float(radius), c_float(mass),
                         draw_id)
+    
+    def addParticleWithBound(self, screen_pos, radius, mass) :
+        (x_world, y_world) = self.viewToWorld(screen_pos)
+        # min max bounding box in view coordinates, will be propertly initialized 
+        # in the canvas oval after the first call to animate
+        #b_min = self.worldToView( (x_world-radius,y_world-radius) )
+        #b_max = self.worldToView( (x_world+radius,y_world+radius) )
+        draw_id1 = self.canvas.create_oval(0,0,0,0,fill="yellow")
+        draw_id2 = self.canvas.create_oval(0,0,0,0,fill="yellow")
+        draw_id3 = self.canvas.create_oval(0,0,0,0,fill="yellow")
+        draw_id4 = self.canvas.create_oval(0,0,0,0,fill="yellow")
+        c_lib.addBound(self.context, 
+                        c_float(x_world), c_float(y_world), 
+                        c_float(radius), c_float(mass),
+                        draw_id1, draw_id2, draw_id3, draw_id4)
 
     # All mouse and key callbacks
 
     def mouseCallback(self, event):
         self.addParticle((event.x,event.y), 0.2, 1.0)
     
+    def mouseCallback2(self, event):
+        self.addParticleWithBound((event.x,event.y), 0.2, 1.0)
+    
     def keyCallback(self, event):
         print(repr(event.char))
     def enterCallback(self, event):
         self.window.destroy()
+
+    def createGrid(self, cell_size, color):
+        num_rows = int(2 * self.world_y_max / cell_size)
+        num_cols = int(2 * self.world_x_max / cell_size)
+
+        for row in range(num_rows + 1):
+            x1_C = - self.world_x_max
+            x2_C = self.world_x_max
+            y_C = - self.world_y_max + row * cell_size
+            self.canvas.create_line(*self.worldToView( (x1_C, y_C) ),
+                                    *self.worldToView( (x2_C, y_C) ),
+                                    fill=color)
+
+        for col in range(num_cols + 1):
+            x_C = - self.world_x_max + col * cell_size
+            y1_C = - self.world_x_max
+            y2_C = self.world_x_max
+            self.canvas.create_line(*self.worldToView( (x_C, y1_C) ),
+                                    *self.worldToView( (x_C, y2_C) ),
+                                    fill=color)
+    def createAxisLabels(self):
+        x_labels = range(-10, 10, 2)
+        for label in x_labels:
+            x_C = label
+            y_C = 0.0
+            x, y = self.worldToView((x_C, y_C))
+            y -= 10  # Position below the x-axis
+            self.canvas.create_text(x, y, text=str(label), fill='dark gray')
+
+        y_labels = range(-10, 10, 2)
+        for label in y_labels:
+            x_C = 0.0
+            y_C = label
+            x, y = self.worldToView((x_C, y_C))
+            x -= 10  # Position to the right of the y-axis
+            self.canvas.create_text(x, y, text=str(label), fill='dark gray')
+
+    def createGridWithSubdivisions(self, cell_size, num_subdivisions):
+        subdivision_size = cell_size / num_subdivisions
+        self.createGrid(subdivision_size, 'light gray')
+        self.createGrid(cell_size, 'dark gray')
+        self.createAxisLabels()
 
 
 gui = ParticleUI()

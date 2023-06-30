@@ -13,14 +13,37 @@ typedef struct Constraint {
 
 } Constraint;
 
+typedef struct Bound {
+  int particle1;
+  int particle2;
+  float target_distance;
+  float stiffness;
+} Bound;
+
+typedef struct BoundConstraint {
+  int num_bounds;
+  Bound* bounds;
+  int capacity_bounds;
+  int num_constraint;
+  Constraint* constraints;
+  int capacity_constraints;
+} BoundConstraint;
+
 typedef struct GroundConstraint {
 
   int num_constraint;
   Constraint* constraints;
   int capacity_constraints;
-  int origin;
 
 } GroundConstraint;
+
+typedef struct ParticleConstraint {
+
+  int num_constraint;
+  Constraint* constraints;
+  int capacity_constraints;
+
+} ParticleConstraint;
 
 
 typedef struct Context {
@@ -39,6 +62,9 @@ typedef struct Context {
   //Constraints
   GroundConstraint* ground_constraints;
   
+  ParticleConstraint* particle_constraints;
+
+  BoundConstraint* bounds_constraints;
 } Context;
 
 // --------------------------------------------------
@@ -47,6 +73,10 @@ Context* initializeContext(int capacity);
 
 
 GroundConstraint* initializeGroundConstraint(int capacity);
+
+ParticleConstraint* initializeParticleConstraint(int capacity);
+
+BoundConstraint* initializeBoundsConstraint(int capacity);
 
 // ------------------------------------------------
 
@@ -87,5 +117,9 @@ void applyFriction(Context* context, float );
 void deleteContactConstraints(Context* context);
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider);
 void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider);
+void checkContactWithParticle(Context* context, int particle_id1, int particle_id2);
+void addParticleConstraint(Context* context, Vec2 constraint, int origin);
+void checkBoundConstraint(Context* context, int bound_id);
+void addBoundConstraint(Context* context, Vec2 constraint, int origin);
 // ------------------------------------------------
 
