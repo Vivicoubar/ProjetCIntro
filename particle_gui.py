@@ -103,12 +103,12 @@ class ParticleUI :
         self.ground_constraint = c_lib.initializeGroundConstraint(300)
         self.particle_constraint = c_lib.initializeParticleConstraint(300)
         self.bounds_constraint = c_lib.initializeBoundsConstraint(300)
-        self.width = 1000
-        self.height = 1000
+        self.width = 1200
+        self.height = 800
 
         # physical simulation will work in [-world_x_max,world_x_max] x [-world_y_max,world_y_max]
-        self.world_x_max = 10
-        self.world_y_max = 10
+        self.world_x_max = 12
+        self.world_y_max = 8
         # WARNING : the mappings assume world bounding box and canvas have the same ratio !
 
         self.window = Tk()
@@ -119,13 +119,7 @@ class ParticleUI :
 
         # create grid
         self.createGridWithSubdivisions(1.0, 5)
-        # Initialize drawing, only needed if the context is initialized with elements,
-        for i in range(self.context.contents.num_ground_sphere):
-            sphere = c_lib.getGroundSphereCollider(self.context, i)
-            draw_id = self.canvas.create_oval(*self.worldToView( (sphere.center[0]-sphere.radius,sphere.center[1]-sphere.radius) ),
-                                              *self.worldToView( (sphere.center[0]+sphere.radius,sphere.center[1]+sphere.radius) ),
-                                              fill="blue") 
-            
+        # Initialize drawing, only needed if the context is initialized with elements, 
         for i in range(self.context.contents.num_ground_plane):
             plane = c_lib.getGroundPlaneCollider(self.context, i)
             x0 , y0 = plane.start_pos[0], plane.start_pos[1]
@@ -133,6 +127,12 @@ class ParticleUI :
             draw_id = self.canvas.create_line(*self.worldToView( (x0,y0)),
                                               *self.worldToView((x1,y1)),
                                               fill="black", width=3) 
+        
+        for i in range(self.context.contents.num_ground_sphere):
+            sphere = c_lib.getGroundSphereCollider(self.context, i)
+            draw_id = self.canvas.create_oval(*self.worldToView( (sphere.center[0]-sphere.radius,sphere.center[1]-sphere.radius) ),
+                                              *self.worldToView( (sphere.center[0]+sphere.radius,sphere.center[1]+sphere.radius) ),
+                                              fill="blue") 
 
         # otherwise, see addParticle
         for i in range(self.context.contents.num_particles):
@@ -239,7 +239,8 @@ class ParticleUI :
                                     *self.worldToView( (x_C, y2_C) ),
                                     fill=color)
     def createAxisLabels(self):
-        x_labels = range(-10, 10, 2)
+        x_label_max = int(self.world_x_max)
+        x_labels = range(- x_label_max, x_label_max)
         for label in x_labels:
             x_C = label
             y_C = 0.0
@@ -247,7 +248,8 @@ class ParticleUI :
             y += 10  # Position below the x-axis
             self.canvas.create_text(x, y, text=str(label), fill='dark gray')
 
-        y_labels = range(-10, 10, 2)
+        y_label_max = int(self.world_y_max)
+        y_labels = range(- y_label_max, y_label_max)
         for label in y_labels:
             x_C = 0.0
             y_C = label

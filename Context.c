@@ -6,6 +6,9 @@
 #include <assert.h>
 #include <math.h>
 
+#define NUM_GROUND_PLANES 6
+#define NUM_GROUND_SPHERES 54
+
 // ------------------------------------------------
 
 Particle getParticle(Context* context, int id)
@@ -49,13 +52,13 @@ void addBound(Context* context, float x, float y, float radius, float mass, int 
     int num2 = addParticleWithId(context, x-radius, y+radius, radius, mass, draw_id2);
     int num3 = addParticleWithId(context, x+radius, y+radius, radius, mass, draw_id3);
     int num4 = addParticleWithId(context, x+radius, y-radius, radius, mass, draw_id4);
-    Bound bound1 = {num1, num2, radius*2, 0.5};
-
-    Bound bound2 = {num2, num3, radius*2, 0.5};
-    Bound bound3 = {num3, num4, radius*2, 0.5};
-    Bound bound4 = {num4, num1, radius*2, 0.5};
-    Bound bound5 = {num2, num4, radius*2 *sqrt(2), 0.5};
-    Bound bound6 = {num1, num3, radius*2 *sqrt(2), 0.5};
+    float stiffness = 0.3;
+    Bound bound1 = {num1, num2, radius*2, stiffness};
+    Bound bound2 = {num2, num3, radius*2, stiffness};
+    Bound bound3 = {num3, num4, radius*2, stiffness};
+    Bound bound4 = {num4, num1, radius*2, stiffness};
+    Bound bound5 = {num2, num4, radius*2 *sqrt(2), stiffness};
+    Bound bound6 = {num1, num3, radius*2 *sqrt(2), stiffness};
     context->bounds_constraints->bounds[context->bounds_constraints->num_bounds] = bound1;
     context->bounds_constraints->num_bounds += 1;
     context->bounds_constraints->bounds[context->bounds_constraints->num_bounds] = bound2;
@@ -127,26 +130,58 @@ Context* initializeContext(int capacity)
   context->particles = malloc(capacity*sizeof(Particle));
   memset(context->particles,0,capacity*sizeof(Particle));
   
-  //initialize spheres
-  context->num_ground_sphere = 5;
-  context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
-  Vec2 center_spheres[] = {{-5.5F, -1.0F}, {-2.5F, 3.0F}, {0.0F, 0.0F}, {2.5F, 3.0F}, {5.5F, -1.0F}};
-  float radius_spheres[] = {1.5F, 1.7F, 1.0F, 1.7F, 1.5F};
-  for (int i = 0; i < context->num_ground_sphere; i++) {
-    context->ground_spheres[i].center = center_spheres[i];
-    context->ground_spheres[i].radius = radius_spheres[i];
-  }
 
   //initialize planes
-  context->num_ground_plane = 6;
+  context->num_ground_plane = NUM_GROUND_PLANES;
   context->ground_planes = malloc(context->num_ground_plane*sizeof(PlaneCollider));
-  Vec2 start_pos_planes[] = {{7.5F, -5.0F}, {-9.5F, -3.0F},  {9.5F, 9.5F}, {-7.5F, -5.0F}, {9.5F, -3.0F}, {-9.5F, 9.5F}};
-  Vec2 director_planes[]  = {{-15.0F, 0.0F}, {0.0F, 12.5F}, {0.0F, -12.5F}, {-2.0F, 2.0F}, {-2.0F, -2.0F},{19.0F, 0.0F}};
+  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F}, {-9.5F, -7.5F}, {11.5F, -5.5F}};
+  Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.0F, 0.0F}, {0.0F, 13.0F}, {0.0F, -13.0F}, {23.0F, 0.0F}, {-2.0F, 2.0F}, {-2.0F, -2.0F}};
   for (int i = 0; i < context->num_ground_plane; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
   }
 
+  //initialize spheres
+  context->num_ground_sphere = NUM_GROUND_SPHERES;
+  context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
+
+  Vec2 center_spheres[NUM_GROUND_SPHERES] = {{7.F, 0.F}};
+  float radius_spheres[NUM_GROUND_SPHERES] = {1.5F};
+  int num_spheres_placed = 1;
+  for (int i = 0; i < 5 ; i++) {
+      center_spheres[num_spheres_placed] = (Vec2){-3.5F + 1.75F * (float)i, 0.F};
+      radius_spheres[num_spheres_placed] = .48F;
+      num_spheres_placed++;
+  }
+  for (int i = 0; i < 2 ; i++) {
+      center_spheres[num_spheres_placed] = (Vec2){7.F , -5.F + 10.F * (float)i};
+      radius_spheres[num_spheres_placed] = 0.75F;
+      num_spheres_placed++;
+  }
+  for (int i = 0; i < 2 ; i++) {
+    for (int j = 0; j < 2 ; j++) {
+      center_spheres[num_spheres_placed] = (Vec2){4.5F + 5.F * (float)i, -2.5F + 5.F * (float)j};
+      radius_spheres[num_spheres_placed] = 1.F;
+      num_spheres_placed++;
+    }
+  }
+  for (int i = 0; i < 3 ; i++) {
+    for (int j = 0; j < 12 ; j++) {
+      center_spheres[num_spheres_placed] = (Vec2){-10.F + 2.F * (float) i + 1.F * (float) (j % 2), -5.5F + (float) j};
+      radius_spheres[num_spheres_placed] = .25F;
+      num_spheres_placed++;
+    }
+  }
+  for (int i = 0; i < 6 ; i++) {
+      center_spheres[num_spheres_placed] = (Vec2){-11.5F , -4.5F + 2.F * (float) i};
+      radius_spheres[num_spheres_placed] = .5F;
+      num_spheres_placed++;
+  }
+
+  for (int i = 0; i < context->num_ground_sphere; i++) {
+    context->ground_spheres[i].center = center_spheres[i];
+    context->ground_spheres[i].radius = radius_spheres[i];
+  }
   
   context->ground_constraints = initializeGroundConstraint(capacity*100);
   context->particle_constraints = initializeParticleConstraint(capacity*100);
