@@ -7,7 +7,7 @@
 #include <math.h>
 
 #define NUM_GROUND_PLANES 6
-#define NUM_GROUND_SPHERES 54
+#define NUM_GROUND_SPHERES 21
 
 // ------------------------------------------------
 
@@ -145,38 +145,17 @@ Context* initializeContext(int capacity)
   context->num_ground_sphere = NUM_GROUND_SPHERES;
   context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
 
-  Vec2 center_spheres[NUM_GROUND_SPHERES] = {{7.F, 0.F}};
-  float radius_spheres[NUM_GROUND_SPHERES] = {1.5F};
+  Vec2 center_spheres[NUM_GROUND_SPHERES] = {{5.5F, 0.F}};
+  float radius_spheres[NUM_GROUND_SPHERES] = {2.5F};
   int num_spheres_placed = 1;
   for (int i = 0; i < 5 ; i++) {
-      center_spheres[num_spheres_placed] = (Vec2){-3.5F + 1.75F * (float)i, 0.F};
-      radius_spheres[num_spheres_placed] = .48F;
-      num_spheres_placed++;
-  }
-  for (int i = 0; i < 2 ; i++) {
-      center_spheres[num_spheres_placed] = (Vec2){7.F , -5.F + 10.F * (float)i};
-      radius_spheres[num_spheres_placed] = 0.75F;
-      num_spheres_placed++;
-  }
-  for (int i = 0; i < 2 ; i++) {
-    for (int j = 0; j < 2 ; j++) {
-      center_spheres[num_spheres_placed] = (Vec2){4.5F + 5.F * (float)i, -2.5F + 5.F * (float)j};
-      radius_spheres[num_spheres_placed] = 1.F;
-      num_spheres_placed++;
-    }
-  }
-  for (int i = 0; i < 3 ; i++) {
-    for (int j = 0; j < 12 ; j++) {
-      center_spheres[num_spheres_placed] = (Vec2){-10.F + 2.F * (float) i + 1.F * (float) (j % 2), -5.5F + (float) j};
+    for (int j = 0; j < 4 ; j++) {
+      center_spheres[num_spheres_placed] = (Vec2){-10.F + 2.F * (float) i + 1.F * (float) (j % 2), -2.F + 1.5F * (float) j};
       radius_spheres[num_spheres_placed] = .25F;
       num_spheres_placed++;
     }
   }
-  for (int i = 0; i < 6 ; i++) {
-      center_spheres[num_spheres_placed] = (Vec2){-11.5F , -4.5F + 2.F * (float) i};
-      radius_spheres[num_spheres_placed] = .5F;
-      num_spheres_placed++;
-  }
+  printf("%d", num_spheres_placed);
 
   for (int i = 0; i < context->num_ground_sphere; i++) {
     context->ground_spheres[i].center = center_spheres[i];

@@ -80,7 +80,7 @@ class BOUNDS_CONSTRAINTS(Structure):
 # ("pos", c_float*2) => fixed size array of two float
 
 
-# Declare proper return types for methods (otherwise considered as c_int)
+# Declare proper return types for methods (otherwise co54nsidered as c_int)
 c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeContext is Context*
 c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
