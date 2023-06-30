@@ -144,7 +144,7 @@ class ParticleUI :
         
         # Initialize Mouse and Key events
         self.canvas.bind("<Button-1>", lambda event: self.mouseCallback(event))
-        self.canvas.bind("<Button-2>", lambda event: self.mouseCallback2(event))
+        self.canvas.bind("<Button-3>", lambda event: self.mouseCallback2(event))
         self.window.bind("<Key>", lambda event: self.keyCallback(event)) # bind all key
         self.window.bind("<Escape>", lambda event: self.enterCallback(event)) 
         # bind specific key overide default binding
@@ -197,10 +197,10 @@ class ParticleUI :
         # in the canvas oval after the first call to animate
         #b_min = self.worldToView( (x_world-radius,y_world-radius) )
         #b_max = self.worldToView( (x_world+radius,y_world+radius) )
-        draw_id1 = self.canvas.create_oval(0,0,0,0,fill="yellow")
-        draw_id2 = self.canvas.create_oval(0,0,0,0,fill="yellow")
-        draw_id3 = self.canvas.create_oval(0,0,0,0,fill="yellow")
-        draw_id4 = self.canvas.create_oval(0,0,0,0,fill="yellow")
+        draw_id1 = self.canvas.create_oval(0,0,0,0,fill="gold")
+        draw_id2 = self.canvas.create_oval(0,0,0,0,fill="gold")
+        draw_id3 = self.canvas.create_oval(0,0,0,0,fill="gold")
+        draw_id4 = self.canvas.create_oval(0,0,0,0,fill="gold")
         c_lib.addBound(self.context, 
                         c_float(x_world), c_float(y_world), 
                         c_float(radius), c_float(mass),
@@ -244,7 +244,7 @@ class ParticleUI :
             x_C = label
             y_C = 0.0
             x, y = self.worldToView((x_C, y_C))
-            y -= 10  # Position below the x-axis
+            y += 10  # Position below the x-axis
             self.canvas.create_text(x, y, text=str(label), fill='dark gray')
 
         y_labels = range(-10, 10, 2)

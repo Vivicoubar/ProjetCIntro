@@ -298,7 +298,7 @@ void deleteContactConstraints(Context* context)
 }
 
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider) {
-  Vec2 pos_particle = context->particles[particle_id].position;
+  Vec2 pos_particle = context->particles[particle_id].next_pos;
   Vec2 pos_plane = collider->start_pos;
   Vec2 director = collider->director;
   Vec2 normal_c = {director.y, -director.x};//Should be pointing to the top
@@ -315,10 +315,11 @@ void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* col
 }
 
 void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider) {
-  Vec2 pos_particle = context->particles[particle_id].position;
+  Vec2 pos_particle = context->particles[particle_id].next_pos;
+  float radius_particle = context->particles[particle_id].radius;
   Vec2 center = collider->center;
   float radius = collider->radius;
-  float sdf = sqrt(scalarProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius;
+  float sdf = sqrt(scalarProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius - radius_particle;
   if(sdf < 0) {
     Vec2 normal = substractVector(pos_particle, center);
     normal = normalize(normal);
@@ -328,11 +329,11 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
 }
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-  Vec2 xij = substractVector(context->particles[particle_id1].position, context->particles[particle_id2].position);
+  Vec2 xij = substractVector(context->particles[particle_id1].next_pos, context->particles[particle_id2].next_pos);
   float c = sqrt(scalarProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
   if (c < 0) {
-      float di = context->particles[particle_id2].inv_mass / (context->particles[particle_id2].inv_mass  + context->particles[particle_id1].inv_mass ) * c;
-      Vec2 constraint = multiplyByScalar(xij,-di * (c +  context->particles[particle_id1].radius + context->particles[particle_id2].radius));
+      float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass  + context->particles[particle_id2].inv_mass ) * c;
+      Vec2 constraint = multiplyByScalar(xij,-di * sqrt(scalarProduct(xij,xij)));
       addParticleConstraint(context, constraint, particle_id1);
   }
 }
