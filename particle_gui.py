@@ -144,7 +144,7 @@ class ParticleUI :
         
         # Initialize Mouse and Key events
         self.canvas.bind("<Button-1>", lambda event: self.mouseCallback(event))
-        self.canvas.bind("<Button-2>", lambda event: self.mouseCallback2(event))
+        self.canvas.bind("<Button-3>", lambda event: self.mouseCallback2(event))
         self.window.bind("<Key>", lambda event: self.keyCallback(event)) # bind all key
         self.window.bind("<Escape>", lambda event: self.enterCallback(event)) 
         # bind specific key overide default binding
