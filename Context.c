@@ -231,8 +231,12 @@ void addDynamicContactConstraints(Context* context)
 {
   for (int i = 0; i < context->num_particles; i++) {
     for (int j = 0; j < context->num_particles; j++) {
-      if (i != j) {
-        checkContactWithParticle(context,i ,j);
+        // In order to optimize the code, calculate the distance between two particles. If bigger than sum of radius, skip
+        if (i != j) {
+        Vec2 vector = substractVector(context->particles[i].position, context->particles[j].position);
+        if(sqrt(dotProduct(vector, vector)) <= (context->particles[i].radius + context->particles[j].radius)) {
+          checkContactWithParticle(context,i ,j);
+        }
       }
     }
   }
@@ -245,10 +249,19 @@ void addStaticContactConstraints(Context* context)
 {
   for (int i = 0; i < context->num_particles; i++) {
     for(int j = 0; j < context->num_ground_plane; j++) {
-      checkContactWithPlane(context, i, &(context->ground_planes[j]));
+      // In order to optimize the code, calculate the orthogonal projection. If bigger than radius, skip
+      Vec2 normal = {context->ground_planes[j].director.y, -context->ground_planes[j].director.x};
+      Vec2 vector = {context->particles[i].position.x - context->ground_planes[j].start_pos.x, context->particles[i].position.y - context->ground_planes[j].start_pos.y};
+      if(abs(dotProduct(normal, vector)) / (sqrt(dotProduct(normal, normal))) <= context->particles[i].radius) {
+              checkContactWithPlane(context, i, &(context->ground_planes[j]));
+      }
     }
     for(int j=0; j < context->num_ground_sphere; j++) {
-      checkContactWithSphere(context, i, &(context->ground_spheres[j]));
+      // In order to optimize the code, calculate the distance between the sphere and the particle. If bigger than sum of radius, skip
+      Vec2 vector = substractVector(context->particles[i].position, context->ground_spheres[j].center);
+      if(sqrt(dotProduct(vector, vector)) <= (context->particles[i].radius + context->ground_spheres[j].radius)) {
+        checkContactWithSphere(context, i, &(context->ground_spheres[j]));
+      }
     }
   }
 }
@@ -303,9 +316,9 @@ void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* col
   Vec2 director = collider->director;
   Vec2 normal_c = {director.y, -director.x};//Should be pointing to the top
   normal_c = normalize(normal_c); 
-  float scalar_proj_qc = scalarProduct(substractVector(pos_particle, pos_plane), normal_c);
+  float scalar_proj_qc = dotProduct(substractVector(pos_particle, pos_plane), normal_c);
   Vec2 q_c = substractVector(pos_particle,multiplyByScalar(normal_c, scalar_proj_qc));
-  float scalar_proj_c = scalarProduct(substractVector(pos_particle, q_c), normal_c);
+  float scalar_proj_c = dotProduct(substractVector(pos_particle, q_c), normal_c);
   
   float c = scalar_proj_c - context->particles[particle_id].radius;
   
@@ -318,7 +331,7 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
   Vec2 pos_particle = context->particles[particle_id].position;
   Vec2 center = collider->center;
   float radius = collider->radius;
-  float sdf = sqrt(scalarProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius;
+  float sdf = sqrt(dotProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius;
   if(sdf < 0) {
     Vec2 normal = substractVector(pos_particle, center);
     normal = normalize(normal);
@@ -329,7 +342,7 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
   Vec2 xij = substractVector(context->particles[particle_id1].position, context->particles[particle_id2].position);
-  float c = sqrt(scalarProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
+  float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
   if (c < 0) {
       float di = context->particles[particle_id2].inv_mass / (context->particles[particle_id2].inv_mass  + context->particles[particle_id1].inv_mass ) * c;
       Vec2 constraint = multiplyByScalar(xij,-di * (c +  context->particles[particle_id1].radius + context->particles[particle_id2].radius));
@@ -350,7 +363,7 @@ void checkBoundConstraint(Context* context, int bound_id) {
   float inv_m2 = particle2.inv_mass;
   
   Vec2 x_21 = substractVector(particle1.next_pos, particle2.next_pos);
-  float norm_x_21 = sqrt(scalarProduct(x_21, x_21));
+  float norm_x_21 = sqrt(dotProduct(x_21, x_21));
   float c = norm_x_21 - target_distance;
   float beta = stiffness;
 
