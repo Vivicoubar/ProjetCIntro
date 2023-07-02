@@ -22,5 +22,6 @@ Context.o: Context.c Context.h Constraint.h Particle.h Vec2.h
 	gcc $(CFLAGS) -c Context.c -o Context.o
 
 clean:
-	rm *.o
+	del *.o
+	del *.so
 

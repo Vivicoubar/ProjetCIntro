@@ -215,6 +215,10 @@ class ParticleUI :
         self.addParticleWithBound((event.x,event.y), 0.2, 1.0)
     
     def keyCallback(self, event):
+        if(event.char == "e"):
+            for i in range(0,5):
+                self.addParticle((100 + i*200, 100), 0.2, 1.0)
+            
         print(repr(event.char))
     def enterCallback(self, event):
         self.window.destroy()

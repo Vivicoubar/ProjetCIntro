@@ -128,29 +128,44 @@ Context* initializeContext(int capacity)
   memset(context->particles,0,capacity*sizeof(Particle));
   
   //initialize spheres
-  context->num_ground_sphere = 5;
+  int num_simple_sphere = 0;
+  int num_line = 9;
+  int num_galton_spheres= 45;
+  context->num_ground_sphere = num_simple_sphere + 5 * num_line + num_galton_spheres;
   context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
   Vec2 center_spheres[] = {{-5.5F, -1.0F}, {-2.5F, 3.0F}, {0.0F, 0.0F}, {2.5F, 3.0F}, {5.5F, -1.0F}};
-  float radius_spheres[] = {1.5F, 1.7F, 1.0F, 1.7F, 1.5F};
-  for (int i = 0; i < context->num_ground_sphere; i++) {
+  float radius_spheres[] = {0.5F, 0.7F, 0.2F, 0.7F, 0.5F};
+  for (int i = 0; i < num_simple_sphere; i++) {
     context->ground_spheres[i].center = center_spheres[i];
     context->ground_spheres[i].radius = radius_spheres[i];
   }
+  Vec2 start_pos[] = {{-8.0F,-5.0F},{-6.0F,-5.0F}, {-4.0F,-5.0F}, {-2.0F,-5.0F},
+                       {-0.0F,-5.0F}, {2.0F,-5.0F}, {4.0F,-5.0F}, {6.0F,-5.0F}, {8.0F,-5.0F}};
+  createLineColliders(context, start_pos, num_line, num_simple_sphere);
+  Vec2 origin = {0.0f, 7.0f};
+  int num_floors = 9;
+  createGaltonBox(context, origin, num_floors, num_simple_sphere + num_line*5);
+
 
   //initialize planes
-  context->num_ground_plane = 6;
+  context->num_ground_plane = 3;
   context->ground_planes = malloc(context->num_ground_plane*sizeof(PlaneCollider));
-  Vec2 start_pos_planes[] = {{7.5F, -5.0F}, {-9.5F, -3.0F},  {9.5F, 9.5F}, {-7.5F, -5.0F}, {9.5F, -3.0F}, {-9.5F, 9.5F}};
-  Vec2 director_planes[]  = {{-15.0F, 0.0F}, {0.0F, 12.5F}, {0.0F, -12.5F}, {-2.0F, 2.0F}, {-2.0F, -2.0F},{19.0F, 0.0F}};
+  Vec2 start_pos_planes[] = {{9.5F, -5.0F}, {-9.5F, -5.0F},  {9.5F, 9.5F}};
+  Vec2 director_planes[]  = {{-19.0F, 0.0F}, {0.0F, 14.5F}, {0.0F, -14.5F}};
   for (int i = 0; i < context->num_ground_plane; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
   }
 
-  
+ //initialize constraints 
   context->ground_constraints = initializeGroundConstraint(capacity*100);
   context->particle_constraints = initializeParticleConstraint(capacity*100);
   context->bounds_constraints = initializeBoundsConstraint(capacity*100);
+
+  int num_boxes = 5;
+  context->box_constraints = initializeBoxConstraint(capacity*100, num_boxes);
+
+  //initialize Boxes
   
   return context;
 }
@@ -162,6 +177,16 @@ GroundConstraint* initializeGroundConstraint(int capacity) {
   constraint->constraints = malloc(capacity*sizeof(constraint->constraints));
   return constraint;
 }
+
+BoxConstraint* initializeBoxConstraint(int capacity, int num_boxes) {
+  BoxConstraint* constraint = malloc(sizeof(BoxConstraint));
+  constraint->num_constraint = 0;
+  constraint-> num_box = 0;
+  constraint->capacity_constraints = 200*sizeof(constraint->constraints); //TODO Améliorer la structure
+  constraint->constraints = malloc(capacity*sizeof(constraint->constraints));
+  return constraint;
+}
+
 
 
 ParticleConstraint* initializeParticleConstraint(int capacity) {
@@ -311,7 +336,7 @@ void deleteContactConstraints(Context* context)
 }
 
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider) {
-  Vec2 pos_particle = context->particles[particle_id].position;
+  Vec2 pos_particle = context->particles[particle_id].next_pos;
   Vec2 pos_plane = collider->start_pos;
   Vec2 director = collider->director;
   Vec2 normal_c = {director.y, -director.x};//Should be pointing to the top
@@ -328,10 +353,10 @@ void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* col
 }
 
 void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider) {
-  Vec2 pos_particle = context->particles[particle_id].position;
+  Vec2 pos_particle = context->particles[particle_id].next_pos;
   Vec2 center = collider->center;
   float radius = collider->radius;
-  float sdf = sqrt(dotProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius;
+  float sdf = sqrt(dotProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius - context->particles[particle_id].radius;
   if(sdf < 0) {
     Vec2 normal = substractVector(pos_particle, center);
     normal = normalize(normal);
@@ -341,7 +366,7 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
 }
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-  Vec2 xij = substractVector(context->particles[particle_id1].position, context->particles[particle_id2].position);
+  Vec2 xij = substractVector(context->particles[particle_id1].next_pos, context->particles[particle_id2].next_pos);
   float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
   if (c < 0) {
       float di = context->particles[particle_id2].inv_mass / (context->particles[particle_id2].inv_mass  + context->particles[particle_id1].inv_mass ) * c;
@@ -375,6 +400,36 @@ void checkBoundConstraint(Context* context, int bound_id) {
 
   addBoundConstraint(context, constraint1, particle_id1);
   addBoundConstraint(context, constraint2, particle_id2);
+}
+
+
+void createLineColliders(Context* context, Vec2 * start_pos, int length, int sphere_num) {
+  float radius = 0.2F;
+  int line_height = 5;
+  for (int i =0; i<length; i++) {
+    for (int j =0; j<line_height; j++) {
+      int index = sphere_num + i*line_height + j; 
+      Vec2 pos = {start_pos[i].x, start_pos[i].y + j*2*radius + radius};
+      context->ground_spheres[index].center = pos;
+      context->ground_spheres[index].radius = radius;
+    }
+  }
+}
+
+void createGaltonBox(Context* context, Vec2 start_pos, int lines, int sphere_num) {
+  float radius = 0.2F;
+  float distance = 1.0F;
+  int count = 0;
+  for (int i =0; i < lines; i++) {
+    for(int j =0; j <= i; j++) {
+      int index = sphere_num + count;
+      count ++;
+      Vec2 pos = {start_pos.x - distance*i + distance*2*j, start_pos.y - distance*i};
+      context->ground_spheres[index].center = pos;
+      context->ground_spheres[index].radius = radius;
+    }
+
+  }
 }
 
 
