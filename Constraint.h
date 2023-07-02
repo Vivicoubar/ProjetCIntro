@@ -13,8 +13,11 @@ typedef struct PlaneCollider {
   Vec2 director;
 } PlaneCollider;
 
-
-
+typedef struct BoxCollider {
+  Vec2 center;
+  Vec2 director1;
+  Vec2 director2;
+} BoxCollider;
 
 
 // ------------------------------------------------

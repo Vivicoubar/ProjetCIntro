@@ -98,6 +98,7 @@ void addBoundConstraint(Context* context, Vec2 constraint, int origin) {
   bounds_constraints->num_constraint +=1;
 }
 
+
 // ------------------------------------------------
 
 void setDrawId(Context* context, int sphere_id, int draw_id)
@@ -118,6 +119,11 @@ PlaneCollider getGroundPlaneCollider(Context* context, int id)
 {
   return context->ground_planes[id];
 }
+
+BoxCollider getBoxCollider(Context* context, int id)
+{
+  return context->box_collider[id];
+}
 // ------------------------------------------------
 Context* initializeContext(int capacity)
 {
@@ -128,24 +134,30 @@ Context* initializeContext(int capacity)
   memset(context->particles,0,capacity*sizeof(Particle));
   
   //initialize spheres
+  
   int num_simple_sphere = 0;
-  int num_line = 9;
+  int num_line = 0;
+  
   int num_galton_spheres= 45;
   context->num_ground_sphere = num_simple_sphere + 5 * num_line + num_galton_spheres;
   context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
+  /*
   Vec2 center_spheres[] = {{-5.5F, -1.0F}, {-2.5F, 3.0F}, {0.0F, 0.0F}, {2.5F, 3.0F}, {5.5F, -1.0F}};
   float radius_spheres[] = {0.5F, 0.7F, 0.2F, 0.7F, 0.5F};
   for (int i = 0; i < num_simple_sphere; i++) {
     context->ground_spheres[i].center = center_spheres[i];
     context->ground_spheres[i].radius = radius_spheres[i];
-  }
+  }*/
+
+  /*
   Vec2 start_pos[] = {{-8.0F,-5.0F},{-6.0F,-5.0F}, {-4.0F,-5.0F}, {-2.0F,-5.0F},
                        {-0.0F,-5.0F}, {2.0F,-5.0F}, {4.0F,-5.0F}, {6.0F,-5.0F}, {8.0F,-5.0F}};
   createLineColliders(context, start_pos, num_line, num_simple_sphere);
+  */
   Vec2 origin = {0.0f, 7.0f};
   int num_floors = 9;
   createGaltonBox(context, origin, num_floors, num_simple_sphere + num_line*5);
-
+  
 
   //initialize planes
   context->num_ground_plane = 3;
@@ -157,15 +169,29 @@ Context* initializeContext(int capacity)
     context->ground_planes[i].director = director_planes[i];
   }
 
+    //initialize Boxes.
+  
+  int num_boxes = 11;
+  context->num_boxes = num_boxes;
+  context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
+  
+  Vec2 directors_1[] = {{0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.2f} ,  {4.5f,0.2f}};
+  Vec2 directors_2[] = {{0.10f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}, {0.0f, 0.2f}};
+  Vec2 centers[] = {{-8.0f,-4.0f}, {-6.0f,-4.0f}, {-4.0f,-4.0f}, {-2.0f,-4.0f}, {-0.0f,-4.0f}, {2.0f,-4.0f}, {4.0f,-4.0f}, {6.0f,-4.0f}, {8.0f,-4.0f}, {-5.0f, 8.5f}, {5.0f, 8.5f}};
+  for (int i=0; i<num_boxes; i++) {
+    context->box_collider[i].center = centers[i];
+    context->box_collider[i].director1 = directors_1[i];
+    context->box_collider[i].director2 = directors_2[i];
+  }
+
  //initialize constraints 
   context->ground_constraints = initializeGroundConstraint(capacity*100);
   context->particle_constraints = initializeParticleConstraint(capacity*100);
   context->bounds_constraints = initializeBoundsConstraint(capacity*100);
 
-  int num_boxes = 5;
-  context->box_constraints = initializeBoxConstraint(capacity*100, num_boxes);
+  
 
-  //initialize Boxes
+
   
   return context;
 }
@@ -177,17 +203,6 @@ GroundConstraint* initializeGroundConstraint(int capacity) {
   constraint->constraints = malloc(capacity*sizeof(constraint->constraints));
   return constraint;
 }
-
-BoxConstraint* initializeBoxConstraint(int capacity, int num_boxes) {
-  BoxConstraint* constraint = malloc(sizeof(BoxConstraint));
-  constraint->num_constraint = 0;
-  constraint-> num_box = 0;
-  constraint->capacity_constraints = 200*sizeof(constraint->constraints); //TODO Améliorer la structure
-  constraint->constraints = malloc(capacity*sizeof(constraint->constraints));
-  return constraint;
-}
-
-
 
 ParticleConstraint* initializeParticleConstraint(int capacity) {
   ParticleConstraint* constraint = malloc(sizeof(ParticleConstraint));
@@ -288,6 +303,9 @@ void addStaticContactConstraints(Context* context)
         checkContactWithSphere(context, i, &(context->ground_spheres[j]));
       }
     }
+    for(int j=0; j < context->num_boxes; j++) {
+      checkContactWithBox(context, i, j);
+    }
   }
 }
 
@@ -374,6 +392,56 @@ void checkContactWithParticle(Context* context, int particle_id1, int particle_i
       addParticleConstraint(context, constraint, particle_id1);
   }
 }
+
+void checkContactWithBox(Context* context, int particle_id, int box_id) {
+  Vec2 director1 = (context->box_collider[box_id].director1);
+  Vec2 director2 = (context->box_collider[box_id].director2);
+  Vec2 center = context->box_collider[box_id].center;
+
+  float half_width = length(director2) / 2.0f;
+  float half_height = length(director1) / 2.0f;
+  float particle_radius = context->particles[particle_id].radius;
+  float particle_x = context->particles[particle_id].next_pos.x;
+  float particle_y = context->particles[particle_id].next_pos.y;
+
+  float dx = fabs(particle_x - center.x) - (2*half_width + particle_radius);
+  float dy = fabs(particle_y - center.y) - (2*half_height + particle_radius);
+
+  // Check if the particle is colliding with the box
+  if (dx <= 0.0f && dy <= 0.0f) {
+    // Calculate the constraint vector
+    float constraint_x = 0.0f;
+    float constraint_y = 0.0f;
+
+    if (dx > dy) {
+      if (particle_x < center.x) {
+        constraint_x = +dx;
+      }
+      else {
+        constraint_x = -dx;
+      }
+      constraint_y = 0.0f;
+    }
+    else {
+      constraint_x = 0.0f;
+      if (particle_y < center.y) {
+        constraint_y = dy;
+      }
+      else {
+        constraint_y = -dy;
+      }
+    }
+
+    // Apply the constraint vector to move the particle outside the box
+    Vec2 total_constraint = { constraint_x, constraint_y };
+    addGroundConstraint(context, total_constraint, particle_id);
+  }
+}
+
+
+
+
+
 
 void checkBoundConstraint(Context* context, int bound_id) {
   int particle_id1 = context->bounds_constraints->bounds[bound_id].particle1;

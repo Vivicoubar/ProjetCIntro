@@ -28,5 +28,8 @@ Vec2 normalize(Vec2 vector) {
     return res;
 }
 
+float length(Vec2 vector) {
+    return sqrt(dotProduct(vector,vector));
+}
 
 // ------------------------------------------------

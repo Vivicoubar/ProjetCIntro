@@ -20,12 +20,6 @@ typedef struct Bound {
   float stiffness;
 } Bound;
 
-typedef struct Box {
-  Vec2 pos1;
-  Vec2 pos2;
-  Vec2 parallel;
-} Box;
-
 typedef struct BoundConstraint {
   int num_bounds;
   Bound* bounds;
@@ -42,16 +36,6 @@ typedef struct GroundConstraint {
   int capacity_constraints;
 
 } GroundConstraint;
-
-typedef struct BoxConstraint {
-
-  int num_constraint;
-  int num_box;
-  Box* box;
-  Constraint* constraints; 
-  int capacity_constraints;
-
-} BoxConstraint;
 
 typedef struct ParticleConstraint {
 
@@ -75,14 +59,20 @@ typedef struct Context {
   int num_ground_plane;
   PlaneCollider* ground_planes;
 
+  //Box Colliders
+  int num_boxes;
+  BoxCollider* box_collider;
+
+
   //Constraints
   GroundConstraint* ground_constraints;
   
   ParticleConstraint* particle_constraints;
 
   BoundConstraint* bounds_constraints;
+  
 
-  BoxConstraint* box_constraints;
+
 } Context;
 
 // --------------------------------------------------
@@ -95,8 +85,6 @@ GroundConstraint* initializeGroundConstraint(int capacity);
 ParticleConstraint* initializeParticleConstraint(int capacity);
 
 BoundConstraint* initializeBoundsConstraint(int capacity);
-
-BoxConstraint* initializeBoxConstraint(int capacity, int num_boxes);
 
 // ------------------------------------------------
 
@@ -113,6 +101,9 @@ SphereCollider getGroundSphereCollider(Context* context, int id);
 // ------------------------------------------------
 
 PlaneCollider getGroundPlaneCollider(Context* context, int id);
+
+BoxCollider getBoxCollider(Context* context, int id);
+
 
 // ------------------------------------------------
 
@@ -143,5 +134,6 @@ void checkBoundConstraint(Context* context, int bound_id);
 void addBoundConstraint(Context* context, Vec2 constraint, int origin);
 void createLineColliders(Context* context, Vec2 * start_pos, int length, int sphere_num);
 void createGaltonBox(Context* context, Vec2 start_pos, int lines, int sphere_num);
+void checkContactWithBox(Context* context, int particle_id, int box_id);
 // ------------------------------------------------
 
