@@ -46,9 +46,9 @@ Context* initializeContext(int capacity) {
     context->ground_spheres[i].radius = radius_spheres[i];
   }
   
-  context->ground_constraints = initializeGroundConstraint(capacity * 100);
-  context->particle_constraints = initializeParticleConstraint(capacity * 100);
-  context->bound_constraints = initializeBoundConstraint(10, capacity * 100);
+  context->ground_constraints = initializeGroundConstraint(capacity);
+  context->particle_constraints = initializeParticleConstraint(capacity);
+  context->bound_constraints = initializeBoundConstraint(capacity, capacity);
   
   return context;
 }
@@ -169,15 +169,15 @@ void addStaticContactConstraints(Context* context) {
 }
 
 void projectConstraints(Context* context) {
-  for(int i = 0; i < context->ground_constraints->num_constraint; i++) {
+  for(int i = 0; i < context->ground_constraints->num_constraints; i++) {
     GroundConstraint* ground_constraints = context->ground_constraints;
     context->particles[ground_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[ground_constraints->constraints[i].particle_id].next_pos, ground_constraints->constraints[i].vec_constraint);
   }
-  for(int i = 0; i < context->particle_constraints->num_constraint; i++) {
+  for(int i = 0; i < context->particle_constraints->num_constraints; i++) {
     ParticleConstraint* particle_constraints = context->particle_constraints;
     context->particles[particle_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[particle_constraints->constraints[i].particle_id].next_pos, particle_constraints->constraints[i].vec_constraint);
   }
-  for(int i = 0; i < context->bound_constraints->num_constraint; i++) {
+  for(int i = 0; i < context->bound_constraints->num_constraints; i++) {
     BoundConstraint* bound_constraint = context->bound_constraints;
     context->particles[bound_constraint->constraints[i].particle_id].next_pos = sumVector(context->particles[bound_constraint->constraints[i].particle_id].next_pos, bound_constraint->constraints[i].vec_constraint);
   }
@@ -201,7 +201,7 @@ void applyFriction(Context* context, float dt) {
 }
 
 void deleteContactConstraints(Context* context) {
-  context->ground_constraints->num_constraint = 0;
-  context->particle_constraints->num_constraint = 0;
-  context->bound_constraints->num_constraint = 0;
+  context->ground_constraints->num_constraints = 0;
+  context->particle_constraints->num_constraints = 0;
+  context->bound_constraints->num_constraints = 0;
 }

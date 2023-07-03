@@ -30,19 +30,19 @@ typedef struct BoundConstraint {
   int num_bounds;
   Bound* bounds;
   int capacity_bounds;
-  int num_constraint;
+  int num_constraints;
   Constraint* constraints;
   int capacity_constraints;
 } BoundConstraint;
 
 typedef struct GroundConstraint {
-  int num_constraint;
+  int num_constraints;
   Constraint* constraints;
   int capacity_constraints;
 } GroundConstraint;
 
 typedef struct ParticleConstraint {
-  int num_constraint;
+  int num_constraints;
   Constraint* constraints;
   int capacity_constraints;
 } ParticleConstraint;

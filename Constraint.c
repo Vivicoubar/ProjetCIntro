@@ -10,7 +10,7 @@
 
 GroundConstraint* initializeGroundConstraint(int capacity) {
   GroundConstraint* constraint = malloc(sizeof(GroundConstraint));
-  constraint->num_constraint = 0;
+  constraint->num_constraints = 0;
   constraint->capacity_constraints = capacity;
   constraint->constraints = malloc(capacity * sizeof(Constraint));
   return constraint;
@@ -18,7 +18,7 @@ GroundConstraint* initializeGroundConstraint(int capacity) {
 
 ParticleConstraint* initializeParticleConstraint(int capacity) {
   ParticleConstraint* constraint = malloc(sizeof(ParticleConstraint));
-  constraint->num_constraint = 0;
+  constraint->num_constraints = 0;
   constraint->capacity_constraints = capacity;
   constraint->constraints = malloc(capacity * sizeof(Constraint));
   return constraint;
@@ -28,15 +28,21 @@ BoundConstraint* initializeBoundConstraint(int capacity_bounds, int capacity_con
   BoundConstraint* bounds = malloc(sizeof(BoundConstraint));
   bounds->num_bounds = 0;
   bounds->capacity_bounds = capacity_bounds;
-  bounds->bounds = malloc(bounds->capacity_bounds * sizeof(Bound));
-  bounds->num_constraint = 0;
+  bounds->bounds = malloc(capacity_bounds * sizeof(Bound));
+  bounds->num_constraints = 0;
   bounds->capacity_constraints = capacity_constraints;
-  bounds->constraints = malloc(bounds->capacity_constraints * sizeof(Constraint));
+  bounds->constraints = malloc(capacity_constraints * sizeof(Constraint));
   return bounds;
 }
 
 void addBound(Context* context, float x, float y, float radius, float mass, int draw_id1, int draw_id2, int draw_id3, int draw_id4) {
-  assert(context->bound_constraints->num_constraint + 5 < context->bound_constraints->capacity_bounds);
+  if (context->bound_constraints->num_constraints + 6 >= context->bound_constraints->capacity_constraints) {
+    // Si le tableau est plein, augmenter la capacité
+    int new_capacity = context->bound_constraints->capacity_constraints * 2;
+    context->bound_constraints->capacity_constraints = new_capacity;
+    context->bound_constraints->constraints = realloc(context->bound_constraints->constraints, new_capacity * sizeof(Constraint));
+  }
+  // Ajouter la nouvelle liaison
     int num1 = addParticleWithId(context, x - radius, y - radius, radius, mass, draw_id1);
     int num2 = addParticleWithId(context, x - radius, y + radius, radius, mass, draw_id2);
     int num3 = addParticleWithId(context, x + radius, y + radius, radius, mass, draw_id3);
@@ -63,27 +69,45 @@ void addBound(Context* context, float x, float y, float radius, float mass, int 
 }
 
 void addGroundConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  assert(context->ground_constraints->num_constraint < context->ground_constraints->capacity_constraints);
+  if (context->ground_constraints->num_constraints >= context->ground_constraints->capacity_constraints) {
+    // Si le tableau est plein, augmenter la capacité
+    int new_capacity = context->ground_constraints->capacity_constraints * 2;
+    context->ground_constraints->capacity_constraints = new_capacity;
+    context->ground_constraints->constraints = realloc(context->ground_constraints->constraints, new_capacity * sizeof(Constraint));
+  }
+  // Ajouter la nouvelle contrainte
   GroundConstraint* ground_constraints = context->ground_constraints;
-  ground_constraints->constraints[ground_constraints->num_constraint].vec_constraint = vec_constraint;
-  ground_constraints->constraints[ground_constraints->num_constraint].particle_id = particle_id;
-  ground_constraints->num_constraint += 1;
+  ground_constraints->constraints[ground_constraints->num_constraints].vec_constraint = vec_constraint;
+  ground_constraints->constraints[ground_constraints->num_constraints].particle_id = particle_id;
+  ground_constraints->num_constraints += 1;
 }
 
 void addParticleConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  assert(context->particle_constraints->num_constraint < context->particle_constraints->capacity_constraints);
+  if (context->particle_constraints->num_constraints >= context->particle_constraints->capacity_constraints) {
+    // Si le tableau est plein, augmenter la capacité
+    int new_capacity = context->particle_constraints->capacity_constraints * 2;
+    context->particle_constraints->capacity_constraints = new_capacity;
+    context->particle_constraints->constraints = realloc(context->particle_constraints->constraints, new_capacity * sizeof(Constraint));
+  }
+  // Ajouter la nouvelle contrainte
   ParticleConstraint* particle_constraints = context->particle_constraints;
-  particle_constraints->constraints[particle_constraints->num_constraint].vec_constraint = vec_constraint;
-  particle_constraints->constraints[particle_constraints->num_constraint].particle_id = particle_id;
-  particle_constraints->num_constraint += 1;
+  particle_constraints->constraints[particle_constraints->num_constraints].vec_constraint = vec_constraint;
+  particle_constraints->constraints[particle_constraints->num_constraints].particle_id = particle_id;
+  particle_constraints->num_constraints += 1;
 }
 
 void addBoundConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  assert(context->bound_constraints->num_constraint < context->bound_constraints->capacity_constraints);
+  if (context->bound_constraints->num_constraints >= context->bound_constraints->capacity_constraints) {
+    // Si le tableau est plein, augmenter la capacité
+    int new_capacity = context->bound_constraints->capacity_constraints * 2;
+    context->bound_constraints->capacity_constraints = new_capacity;
+    context->bound_constraints->constraints = realloc(context->bound_constraints->constraints, new_capacity * sizeof(Constraint));
+  }
+  // Ajouter la nouvelle contrainte
   BoundConstraint* bound_constraints = context->bound_constraints;
-  bound_constraints->constraints[bound_constraints->num_constraint].vec_constraint = vec_constraint;
-  bound_constraints->constraints[bound_constraints->num_constraint].particle_id = particle_id;
-  bound_constraints->num_constraint += 1;
+  bound_constraints->constraints[bound_constraints->num_constraints].vec_constraint = vec_constraint;
+  bound_constraints->constraints[bound_constraints->num_constraints].particle_id = particle_id;
+  bound_constraints->num_constraints += 1;
 }
 
 void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider) {
