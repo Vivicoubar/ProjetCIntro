@@ -9,14 +9,10 @@
 #define NUM_GROUND_PLANES 6
 #define NUM_GROUND_SPHERES 21
 
-// ------------------------------------------------
-
 Particle getParticle(Context* context, int id)
 {
   return context->particles[id];
 }
-
-// ------------------------------------------------
 
 void addParticle(Context* context, float x, float y, float radius, float mass, int draw_id)
 {
@@ -101,28 +97,20 @@ void addBoundConstraint(Context* context, Vec2 constraint, int origin) {
   bounds_constraints->num_constraint +=1;
 }
 
-// ------------------------------------------------
-
 void setDrawId(Context* context, int sphere_id, int draw_id)
 {
   context->particles[sphere_id].draw_id = draw_id;
 }
-
-// ------------------------------------------------
 
 SphereCollider getGroundSphereCollider(Context* context, int id)
 {
   return context->ground_spheres[id];
 }
 
-// ------------------------------------------------
-
 PlaneCollider getGroundPlaneCollider(Context* context, int id)
 {
   return context->ground_planes[id];
-}
-// ------------------------------------------------
-Context* initializeContext(int capacity)
+}Context* initializeContext(int capacity)
 {
   Context* context = malloc(sizeof(Context));
   context->num_particles = 0;
@@ -197,8 +185,6 @@ BoundConstraint* initializeBoundsConstraint(int capacity) {
   return bounds;
 }
 
-// ------------------------------------------------
-
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation)
 {
   applyExternalForce(context, dt);
@@ -217,8 +203,6 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
 
   deleteContactConstraints(context);
 }
-
-// ------------------------------------------------
 
 void applyExternalForce(Context* context, float dt)
 {

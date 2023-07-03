@@ -4,8 +4,6 @@
 #include "Particle.h"
 #include "Constraint.h"
 
-// ------------------------------------------------
-
 typedef struct Constraint {
   
   Vec2 constraint;  
@@ -78,34 +76,18 @@ ParticleConstraint* initializeParticleConstraint(int capacity);
 
 BoundConstraint* initializeBoundsConstraint(int capacity);
 
-// ------------------------------------------------
-
 void addParticle(Context* context, float x, float y, float radius, float mass, int draw_id);
-
-// ------------------------------------------------
 
 Particle getParticle(Context* context, int id);
 
-// ------------------------------------------------
-
 SphereCollider getGroundSphereCollider(Context* context, int id);
-
-// ------------------------------------------------
 
 PlaneCollider getGroundPlaneCollider(Context* context, int id);
 
-// ------------------------------------------------
-
 void setDrawId(Context* context, int sphere_id, int draw_id);
 
-// ------------------------------------------------
-
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation);
-
-// ------------------------------------------------
 // Methods below are called by updatePhysicalSystem
-// ------------------------------------------------
-
 void applyExternalForce(Context* context, float dt);
 void dampVelocities(Context* context);
 void updateExpectedPosition(Context* context, float dt);
@@ -121,5 +103,3 @@ void checkContactWithParticle(Context* context, int particle_id1, int particle_i
 void addParticleConstraint(Context* context, Vec2 constraint, int origin);
 void checkBoundConstraint(Context* context, int bound_id);
 void addBoundConstraint(Context* context, Vec2 constraint, int origin);
-// ------------------------------------------------
-
