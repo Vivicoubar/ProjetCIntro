@@ -132,6 +132,7 @@ void updateExpectedPosition(Context* context, float dt) {
 }
 
 void addDynamicContactConstraints(Context* context) {
+  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
   for (int particle1_id = 0; particle1_id < context->num_particles; particle1_id++) {
     for (int particle2_id = 0; particle2_id < context->num_particles; particle2_id++) {
         // In order to optimize the code, calculate the distance between two particles. If bigger than sum of radius, skip
@@ -149,6 +150,7 @@ void addDynamicContactConstraints(Context* context) {
 }
 
 void addStaticContactConstraints(Context* context) {
+  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
   for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
     for(int plane_id = 0; plane_id < context->num_ground_planes; plane_id++) {
       // In order to optimize the code, calculate the orthogonal projection. If bigger than radius, skip
