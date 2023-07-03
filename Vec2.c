@@ -19,12 +19,12 @@ Vec2 substractVector(Vec2 vector1, Vec2 vector2) {
     return res;
 }
 
-float scalarProduct(Vec2 vector1, Vec2 vector2) {
+float dotProduct(Vec2 vector1, Vec2 vector2) {
     return vector1.x*vector2.x + vector1.y*vector2.y;
 }
 
 Vec2 normalize(Vec2 vector) {
-    Vec2 res = multiplyByScalar(vector, 1.0F/sqrt(scalarProduct(vector, vector)));
+    Vec2 res = multiplyByScalar(vector, 1.0F/sqrt(dotProduct(vector, vector)));
     return res;
 }
 

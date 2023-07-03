@@ -8,7 +8,7 @@
 
 typedef struct Constraint {
   
-  Vec2 constraint;
+  Vec2 constraint;  
   int origin;
 
 } Constraint;
