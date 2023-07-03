@@ -22,7 +22,7 @@ Context* initializeContext(int capacity) {
   Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F},
                                               {-9.5F, -7.5F}, {11.5F, -5.5F}};
   Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.F, 0.F}, {0.F, 13.F}, {0.F, -13.F},
-                                              {23.0F, 0.F}, {-2.0F, 2.F}, {-2.0F, -2.F}};
+                                              {23.F, 0.F}, {-2.0F, 2.F}, {-2.F, -2.F}};
   for (int i = 0; i < context->num_ground_planes; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
@@ -116,7 +116,7 @@ void applyExternalForce(Context* context, float dt) {
   float dv_grav = - g * dt;
   Vec2 dv = {0.F, dv_grav};
   for (int i = 0; i < context->num_particles; i++) {
-    context->particles[i].velocity = sumVector(context->particles[i].velocity, dv);
+    context->particles[i].velocity = vecSum(context->particles[i].velocity, dv);
   }
 }
 
@@ -127,7 +127,7 @@ void updateExpectedPosition(Context* context, float dt) {
   for (int i = 0; i < context->num_particles; i++) {
     Vec2 pos_i = context->particles[i].position;
     Vec2 v_i = context->particles[i].velocity;
-    context->particles[i].next_pos = sumVector(pos_i, multiplyByScalar(v_i, dt));
+    context->particles[i].next_pos = vecSum(pos_i, vecScale(v_i, dt));
   }
 }
 
@@ -136,7 +136,7 @@ void addDynamicContactConstraints(Context* context) {
     for (int particle2_id = 0; particle2_id < context->num_particles; particle2_id++) {
         // In order to optimize the code, calculate the distance between two particles. If bigger than sum of radius, skip
         if (particle1_id != particle2_id) {
-        Vec2 vector = substractVector(context->particles[particle1_id].position, context->particles[particle2_id].position);
+        Vec2 vector = vecSubstract(context->particles[particle1_id].position, context->particles[particle2_id].position);
         if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle1_id].radius + context->particles[particle2_id].radius)) {
           checkContactWithParticle(context, particle1_id, particle2_id);
         }
@@ -160,7 +160,7 @@ void addStaticContactConstraints(Context* context) {
     }
     for(int sphere_id = 0; sphere_id < context->num_ground_spheres; sphere_id++) {
       // In order to optimize the code, calculate the distance between the sphere and the particle. If bigger than sum of radius, skip
-      Vec2 vector = substractVector(context->particles[particle_id].position, context->ground_spheres[sphere_id].center);
+      Vec2 vector = vecSubstract(context->particles[particle_id].position, context->ground_spheres[sphere_id].center);
       if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle_id].radius + context->ground_spheres[sphere_id].radius)) {
         checkContactWithSphere(context, particle_id, &(context->ground_spheres[sphere_id]));
       }
@@ -171,15 +171,21 @@ void addStaticContactConstraints(Context* context) {
 void projectConstraints(Context* context) {
   for(int i = 0; i < context->ground_constraints->num_constraints; i++) {
     GroundConstraint* ground_constraints = context->ground_constraints;
-    context->particles[ground_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[ground_constraints->constraints[i].particle_id].next_pos, ground_constraints->constraints[i].vec_constraint);
+    Particle* particle = &context->particles[ground_constraints->constraints[i].particle_id];
+    Vec2 vec_constraint = ground_constraints->constraints[i].vec_constraint; 
+    context->particles[ground_constraints->constraints[i].particle_id].next_pos = vecSum(particle->next_pos, vec_constraint);
   }
   for(int i = 0; i < context->particle_constraints->num_constraints; i++) {
     ParticleConstraint* particle_constraints = context->particle_constraints;
-    context->particles[particle_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[particle_constraints->constraints[i].particle_id].next_pos, particle_constraints->constraints[i].vec_constraint);
+    Particle* particle = &context->particles[particle_constraints->constraints[i].particle_id];
+    Vec2 vec_constraint = particle_constraints->constraints[i].vec_constraint; 
+    context->particles[particle_constraints->constraints[i].particle_id].next_pos = vecSum(particle->next_pos, vec_constraint);
   }
   for(int i = 0; i < context->bound_constraints->num_constraints; i++) {
-    BoundConstraint* bound_constraint = context->bound_constraints;
-    context->particles[bound_constraint->constraints[i].particle_id].next_pos = sumVector(context->particles[bound_constraint->constraints[i].particle_id].next_pos, bound_constraint->constraints[i].vec_constraint);
+    BoundConstraint* bound_constraints = context->bound_constraints;
+    Particle* particle = &context->particles[bound_constraints->constraints[i].particle_id];
+    Vec2 vec_constraint = bound_constraints->constraints[i].vec_constraint; 
+    context->particles[bound_constraints->constraints[i].particle_id].next_pos = vecSum(particle->next_pos, vec_constraint);
   }
 }
 
@@ -187,7 +193,7 @@ void updateVelocityAndPosition(Context* context, float dt) {
   for(int i = 0; i < context->num_particles; i++) {
     Vec2 pos = context->particles[i].position;
     Vec2 next_pos = context->particles[i].next_pos;
-    Vec2 new_velocity = multiplyByScalar(substractVector(next_pos, pos), 1.F / dt);
+    Vec2 new_velocity = vecScale(vecSubstract(next_pos, pos), 1.F / dt);
     context->particles[i].velocity = new_velocity;
     context->particles[i].position = next_pos;
   }
@@ -196,7 +202,7 @@ void updateVelocityAndPosition(Context* context, float dt) {
 void applyFriction(Context* context, float dt) {
   for(int i = 0; i < context->num_particles; i++) {
     //Apply a constraint for the friction
-    context->particles[i].velocity = multiplyByScalar(context->particles[i].velocity, (1.F - 0.6F * context->particles[i].inv_mass * dt));
+    context->particles[i].velocity = vecScale(context->particles[i].velocity, (1.F - 0.6F * context->particles[i].inv_mass * dt));
   }
 }
 

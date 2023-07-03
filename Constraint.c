@@ -115,15 +115,15 @@ void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* col
   Vec2 pos_plane = collider->start_pos;
   Vec2 director = collider->director;
   Vec2 normal_c = {director.y, -director.x};//Should be pointing to the top
-  normal_c = normalize(normal_c); 
-  float scalar_proj_qc = dotProduct(substractVector(pos_particle, pos_plane), normal_c);
-  Vec2 q_c = substractVector(pos_particle,multiplyByScalar(normal_c, scalar_proj_qc));
-  float scalar_proj_c = dotProduct(substractVector(pos_particle, q_c), normal_c);
+  normal_c = vecNormalize(normal_c); 
+  float scalar_proj_qc = dotProduct(vecSubstract(pos_particle, pos_plane), normal_c);
+  Vec2 q_c = vecSubstract(pos_particle,vecScale(normal_c, scalar_proj_qc));
+  float scalar_proj_c = dotProduct(vecSubstract(pos_particle, q_c), normal_c);
   
   float c = scalar_proj_c - context->particles[particle_id].radius;
   
   if(c < 0.0F) {
-    addGroundConstraint(context, multiplyByScalar(normal_c, - c), particle_id);
+    addGroundConstraint(context, vecScale(normal_c, - c), particle_id);
   }
 }
 
@@ -132,20 +132,20 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* c
   float radius_particle = context->particles[particle_id].radius;
   Vec2 center = collider->center;
   float radius = collider->radius;
-  float sdf = sqrt(dotProduct(substractVector(pos_particle,center),substractVector(pos_particle,center))) - radius_particle - radius;
+  float sdf = sqrt(dotProduct(vecSubstract(pos_particle,center),vecSubstract(pos_particle,center))) - radius_particle - radius;
   if(sdf < 0) {
-    Vec2 normal = substractVector(pos_particle, center);
-    normal = normalize(normal);
-    addGroundConstraint(context, multiplyByScalar(normal, - sdf), particle_id);
+    Vec2 normal = vecSubstract(pos_particle, center);
+    normal = vecNormalize(normal);
+    addGroundConstraint(context, vecScale(normal, - sdf), particle_id);
   }
 }
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-  Vec2 xij = substractVector(context->particles[particle_id1].position, context->particles[particle_id2].position);
+  Vec2 xij = vecSubstract(context->particles[particle_id1].position, context->particles[particle_id2].position);
   float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
   if (c < 0) {
       float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass + context->particles[particle_id2].inv_mass) * c;
-      Vec2 constraint = multiplyByScalar(xij, - di * sqrt(dotProduct(xij, xij)));
+      Vec2 constraint = vecScale(xij, - di * sqrt(dotProduct(xij, xij)));
       addParticleConstraint(context, constraint, particle_id1);
   }
 }
@@ -162,16 +162,16 @@ void checkBoundConstraint(Context* context, int bound_id) {
   float inv_m1 = particle1.inv_mass;
   float inv_m2 = particle2.inv_mass;
   
-  Vec2 x_21 = substractVector(particle1.next_pos, particle2.next_pos);
+  Vec2 x_21 = vecSubstract(particle1.next_pos, particle2.next_pos);
   float norm_x_21 = sqrt(dotProduct(x_21, x_21));
   float c = norm_x_21 - target_distance;
   float beta = stiffness;
 
   float factor1 = - inv_m1 / (inv_m1 + inv_m2) * beta * c / norm_x_21;
-  Vec2 constraint1 = multiplyByScalar(x_21, factor1);
+  Vec2 constraint1 = vecScale(x_21, factor1);
   
   float factor2 = inv_m2 / (inv_m1 + inv_m2) * beta * c / norm_x_21;
-  Vec2 constraint2 = multiplyByScalar(x_21, factor2);
+  Vec2 constraint2 = vecScale(x_21, factor2);
 
   addBoundConstraint(context, constraint1, particle_id1);
   addBoundConstraint(context, constraint2, particle_id2);

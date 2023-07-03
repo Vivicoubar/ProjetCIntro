@@ -6,12 +6,12 @@ typedef struct Vec2 {
   float y;
 } Vec2;
 
-Vec2 multiplyByScalar(Vec2 vector, float scalar);
-Vec2 sumVector(Vec2 vector1, Vec2 vector2);
-Vec2 substractVector(Vec2 vector1, Vec2 vector2);
+Vec2 vecScale(Vec2 vector, float scalar);
+Vec2 vecSum(Vec2 vector1, Vec2 vector2);
+Vec2 vecSubstract(Vec2 vector1, Vec2 vector2);
 float dotProduct(Vec2 vector1, Vec2 vector2);
 float norm(Vec2 vector);
-Vec2 normalize(Vec2 vector);
-Vec2 clockwiseNormal(Vec2 vector);
+Vec2 vecNormalize(Vec2 vector);
+Vec2 vecClockwiseNormal(Vec2 vector);
 
 #endif
