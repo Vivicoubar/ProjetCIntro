@@ -27,11 +27,12 @@ class PARTICLE(Structure):
                 ("radius",   c_float),
                 ("solid_id", c_int),
                 ("draw_id",  c_int)]
-    
+
+
 class SPHERE_COLLIDER(Structure):
     _fields_ = [("center",c_float*2),
                 ("radius", c_float)]
-    
+
 
 class CONSTRAINT(Structure):
     _fields_ = [("constraint", c_float*2),
@@ -41,16 +42,19 @@ class CONSTRAINT(Structure):
 class PLANE_COLLIDER(Structure):
     _fields_ = [("start_pos", c_float*2),
                ("director", c_float*2)]
-    
+
+
 class GROUND_CONSTRAINT(Structure):
     _fields_ = [("num_constraint", c_int),
                 ("constraint", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints",c_int)]
 
+
 class PARTICLE_CONSTRAINT(Structure):
     _fields_ = [("num_constraint", c_int),
                 ("constraint", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints",c_int)]
+
 
 class CONTEXT(Structure):
     _fields_ = [("num_particles", c_int),
@@ -62,14 +66,16 @@ class CONTEXT(Structure):
                 ("ground_planes", ctypes.POINTER(PLANE_COLLIDER)),
                 ("ground_constraints", ctypes.POINTER(GROUND_CONSTRAINT)),
                 ("particle_constraints", ctypes.POINTER(PARTICLE_CONSTRAINT))]
-    
+
+  
 class BOUNDS(Structure):
     _fields_ = [("particle1", c_int),
                 ("particle2", c_int),
                 ("target_distance", c_float),
                 ("stiffness", c_float)]
 
-class BOUNDS_CONSTRAINTS(Structure):
+
+class BOUND_CONSTRAINTS(Structure):
     _fields_ = [("num_bounds", c_int),
                 ("bounds", ctypes.POINTER(BOUNDS)),
                 ("capacity_bounds", c_int),
@@ -77,8 +83,8 @@ class BOUNDS_CONSTRAINTS(Structure):
                 ("constraints", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints", c_int)]
 
-# ("pos", c_float*2) => fixed size array of two float
 
+# ("pos", c_float*2) => fixed size array of two float
 
 # Declare proper return types for methods (otherwise co54nsidered as c_int)
 c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeContext is Context*
@@ -86,7 +92,7 @@ c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
 c_lib.getGroundPlaneCollider.restype = PLANE_COLLIDER
 c_lib.initializeGroundConstraint.restype = POINTER(GROUND_CONSTRAINT)
-c_lib.initializeBoundsConstraint.restype = POINTER(BOUNDS_CONSTRAINTS)
+c_lib.initializeBoundConstraint.restype = POINTER(BOUND_CONSTRAINTS)
 c_lib.initializeParticleConstraint.restype = POINTER(PARTICLE_CONSTRAINT)
 # WARNING : python parameter should be explicitly converted to proper c_type of not integer.
 # If we already have a c_type (including the one deriving from Structure above)
@@ -102,7 +108,7 @@ class ParticleUI :
         self.context = c_lib.initializeContext(200)
         self.ground_constraint = c_lib.initializeGroundConstraint(300)
         self.particle_constraint = c_lib.initializeParticleConstraint(300)
-        self.bounds_constraint = c_lib.initializeBoundsConstraint(300)
+        self.bounds_constraint = c_lib.initializeBoundConstraint(300)
         self.width = 1200
         self.height = 800
 
@@ -124,8 +130,7 @@ class ParticleUI :
             plane = c_lib.getGroundPlaneCollider(self.context, i)
             x0 , y0 = plane.start_pos[0], plane.start_pos[1]
             x1 ,y1= x0+plane.director[0], y0+plane.director[1]
-            draw_id = self.canvas.create_line(*self.worldToView( (x0,y0)),
-                                              *self.worldToView((x1,y1)),
+            draw_id = self.canvas.create_line(*self.worldToView( (x0,y0) ), *self.worldToView( (x1,y1) ),
                                               fill="black", width=3) 
         
         for i in range(self.context.contents.num_ground_sphere):
@@ -154,8 +159,6 @@ class ParticleUI :
         self.animate()
         # launch UI event loop
         self.window.mainloop()
-
-
 
     def animate(self) :
         """ animation loop """
@@ -207,7 +210,6 @@ class ParticleUI :
                         draw_id1, draw_id2, draw_id3, draw_id4)
 
     # All mouse and key callbacks
-
     def mouseCallback(self, event):
         self.addParticle((event.x,event.y), 0.2, 1.0)
     
@@ -216,6 +218,7 @@ class ParticleUI :
     
     def keyCallback(self, event):
         print(repr(event.char))
+    
     def enterCallback(self, event):
         self.window.destroy()
 

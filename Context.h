@@ -10,15 +10,15 @@ typedef struct Context {
   Particle* particles;
 
   // Ground colliders 
-  int num_ground_sphere;
+  int num_ground_spheres;
   SphereCollider* ground_spheres;
-  int num_ground_plane;
+  int num_ground_planes;
   PlaneCollider* ground_planes;
 
   //Constraints
   GroundConstraint* ground_constraints;
   ParticleConstraint* particle_constraints;
-  BoundConstraint* bounds_constraints;
+  BoundConstraint* bound_constraints;
 } Context;
 
 Context* initializeContext(int capacity);

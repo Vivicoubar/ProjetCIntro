@@ -15,10 +15,8 @@ typedef struct PlaneCollider {
 } PlaneCollider;
 
 typedef struct Constraint {
-  
-  Vec2 constraint;  
-  int origin;
-
+  Vec2 vec_constraint;  
+  int particle_id;
 } Constraint;
 
 typedef struct Bound {
@@ -38,24 +36,20 @@ typedef struct BoundConstraint {
 } BoundConstraint;
 
 typedef struct GroundConstraint {
-
   int num_constraint;
   Constraint* constraints;
   int capacity_constraints;
-
 } GroundConstraint;
 
 typedef struct ParticleConstraint {
-
   int num_constraint;
   Constraint* constraints;
   int capacity_constraints;
-
 } ParticleConstraint;
 
 GroundConstraint* initializeGroundConstraint(int capacity);
 ParticleConstraint* initializeParticleConstraint(int capacity);
-BoundConstraint* initializeBoundsConstraint(int capacity);
+BoundConstraint* initializeBoundConstraint(int capacity_bounds, int capacity_constraints);
 
 void addBound(Context* context, float x, float y, float radius, float mass, int draw_id1, int draw_id2, int draw_id3, int draw_id4);
 void addGroundConstraint(Context* context, Vec2 constraint, int origin);

@@ -1,7 +1,6 @@
 #include "Vec2.h"
 #include <math.h>
 
-
 Vec2 multiplyByScalar(Vec2 vector, float scalar) {
   return (Vec2){vector.x * scalar, vector.y * scalar};
 }

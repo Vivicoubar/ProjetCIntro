@@ -13,43 +13,42 @@ Context* initializeContext(int capacity) {
   Context* context = malloc(sizeof(Context));
   context->num_particles = 0;
   context->capacity_particles = capacity;
-  context->particles = malloc(capacity*sizeof(Particle));
-  memset(context->particles,0,capacity*sizeof(Particle));
-  
+  context->particles = malloc(capacity * sizeof(Particle));
+  memset(context->particles, 0, capacity * sizeof(Particle));
 
   //initialize planes
-  context->num_ground_plane = NUM_GROUND_PLANES;
-  context->ground_planes = malloc(context->num_ground_plane*sizeof(PlaneCollider));
-  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F}, {-9.5F, -7.5F}, {11.5F, -5.5F}};
-  Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.0F, 0.0F}, {0.0F, 13.0F}, {0.0F, -13.0F}, {23.0F, 0.0F}, {-2.0F, 2.0F}, {-2.0F, -2.0F}};
-  for (int i = 0; i < context->num_ground_plane; i++) {
+  context->num_ground_planes = NUM_GROUND_PLANES;
+  context->ground_planes = malloc(context->num_ground_planes * sizeof(PlaneCollider));
+  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F},
+                                              {-9.5F, -7.5F}, {11.5F, -5.5F}};
+  Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.F, 0.F}, {0.F, 13.F}, {0.F, -13.F},
+                                              {23.0F, 0.F}, {-2.0F, 2.F}, {-2.0F, -2.F}};
+  for (int i = 0; i < context->num_ground_planes; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
   }
 
   //initialize spheres
-  context->num_ground_sphere = NUM_GROUND_SPHERES;
-  context->ground_spheres = malloc(context->num_ground_sphere*sizeof(SphereCollider));
-
+  context->num_ground_spheres = NUM_GROUND_SPHERES;
+  context->ground_spheres = malloc(context->num_ground_spheres * sizeof(SphereCollider));
   Vec2 center_spheres[NUM_GROUND_SPHERES] = {{5.5F, 0.F}};
   float radius_spheres[NUM_GROUND_SPHERES] = {2.5F};
   int num_spheres_placed = 1;
   for (int i = 0; i < 5 ; i++) {
     for (int j = 0; j < 4 ; j++) {
       center_spheres[num_spheres_placed] = (Vec2){-10.F + 2.F * (float) i + 1.F * (float) (j % 2), -2.F + 1.5F * (float) j};
-      radius_spheres[num_spheres_placed] = .25F;
+      radius_spheres[num_spheres_placed] = 0.25F;
       num_spheres_placed++;
     }
   }
-
-  for (int i = 0; i < context->num_ground_sphere; i++) {
+  for (int i = 0; i < context->num_ground_spheres; i++) {
     context->ground_spheres[i].center = center_spheres[i];
     context->ground_spheres[i].radius = radius_spheres[i];
   }
   
-  context->ground_constraints = initializeGroundConstraint(capacity*100);
-  context->particle_constraints = initializeParticleConstraint(capacity*100);
-  context->bounds_constraints = initializeBoundsConstraint(capacity*100);
+  context->ground_constraints = initializeGroundConstraint(capacity * 100);
+  context->particle_constraints = initializeParticleConstraint(capacity * 100);
+  context->bound_constraints = initializeBoundConstraint(10, capacity * 100);
   
   return context;
 }
@@ -58,9 +57,9 @@ void addParticle(Context* context, float x, float y, float radius, float mass, i
     assert(context->num_particles<context->capacity_particles); // currently no resize in context
     context->particles[context->num_particles].position.x = x;
     context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.0F;
-    context->particles[context->num_particles].velocity.y = 0.0F;
-    context->particles[context->num_particles].inv_mass = 1.0F/mass;
+    context->particles[context->num_particles].velocity.x = 0.F;
+    context->particles[context->num_particles].velocity.y = 0.F;
+    context->particles[context->num_particles].inv_mass = 1.F/mass;
     context->particles[context->num_particles].radius = radius;
     context->particles[context->num_particles].draw_id = draw_id;
     context->num_particles += 1;
@@ -70,9 +69,9 @@ int addParticleWithId(Context* context, float x, float y, float radius, float ma
     assert(context->num_particles<context->capacity_particles); // currently no resize in context
     context->particles[context->num_particles].position.x = x;
     context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.0F;
-    context->particles[context->num_particles].velocity.y = 0.0F;
-    context->particles[context->num_particles].inv_mass = 1.0F/mass;
+    context->particles[context->num_particles].velocity.x = 0.F;
+    context->particles[context->num_particles].velocity.y = 0.F;
+    context->particles[context->num_particles].inv_mass = 1.F/mass;
     context->particles[context->num_particles].radius = radius;
     context->particles[context->num_particles].draw_id = draw_id;
     context->num_particles += 1;
@@ -102,8 +101,7 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
   addDynamicContactConstraints(context);
   addStaticContactConstraints(context);
 
- 
-  for(int k=0; k<num_constraint_relaxation; ++k) { //// V -> Applied once for now, see particle.gui 
+  for(int k = 0; k < num_constraint_relaxation; ++k) { //// V -> Applied once for now, see particle.gui 
     projectConstraints(context); 
   }
 
@@ -115,7 +113,8 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
 
 void applyExternalForce(Context* context, float dt) {
   float g = 9.81F;
-  Vec2 dv = {0, - g * dt};
+  float dv_grav = - g * dt;
+  Vec2 dv = {0.F, dv_grav};
   for (int i = 0; i < context->num_particles; i++) {
     context->particles[i].velocity = sumVector(context->particles[i].velocity, dv);
   }
@@ -126,43 +125,44 @@ void dampVelocities(Context* context) {
 
 void updateExpectedPosition(Context* context, float dt) {
   for (int i = 0; i < context->num_particles; i++) {
-    context->particles[i].next_pos = sumVector( context->particles[i].position, multiplyByScalar( context->particles[i].velocity,dt));
+    Vec2 pos_i = context->particles[i].position;
+    Vec2 v_i = context->particles[i].velocity;
+    context->particles[i].next_pos = sumVector(pos_i, multiplyByScalar(v_i, dt));
   }
-
 }
 
 void addDynamicContactConstraints(Context* context) {
-  for (int i = 0; i < context->num_particles; i++) {
-    for (int j = 0; j < context->num_particles; j++) {
+  for (int particle1_id = 0; particle1_id < context->num_particles; particle1_id++) {
+    for (int particle2_id = 0; particle2_id < context->num_particles; particle2_id++) {
         // In order to optimize the code, calculate the distance between two particles. If bigger than sum of radius, skip
-        if (i != j) {
-        Vec2 vector = substractVector(context->particles[i].position, context->particles[j].position);
-        if(sqrt(dotProduct(vector, vector)) <= (context->particles[i].radius + context->particles[j].radius)) {
-          checkContactWithParticle(context,i ,j);
+        if (particle1_id != particle2_id) {
+        Vec2 vector = substractVector(context->particles[particle1_id].position, context->particles[particle2_id].position);
+        if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle1_id].radius + context->particles[particle2_id].radius)) {
+          checkContactWithParticle(context, particle1_id, particle2_id);
         }
       }
     }
   }
-  for(int i=0; i < context->bounds_constraints->num_bounds; i++) {
-    checkBoundConstraint(context, i);
+  for(int bound_id = 0; bound_id < context->bound_constraints->num_bounds; bound_id++) {
+    checkBoundConstraint(context, bound_id);
   }
 }
 
 void addStaticContactConstraints(Context* context) {
-  for (int i = 0; i < context->num_particles; i++) {
-    for(int j = 0; j < context->num_ground_plane; j++) {
+  for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
+    for(int plane_id = 0; plane_id < context->num_ground_planes; plane_id++) {
       // In order to optimize the code, calculate the orthogonal projection. If bigger than radius, skip
-      Vec2 normal = {context->ground_planes[j].director.y, -context->ground_planes[j].director.x};
-      Vec2 vector = {context->particles[i].position.x - context->ground_planes[j].start_pos.x, context->particles[i].position.y - context->ground_planes[j].start_pos.y};
-      if(abs(dotProduct(normal, vector)) / (sqrt(dotProduct(normal, normal))) <= context->particles[i].radius) {
-              checkContactWithPlane(context, i, &(context->ground_planes[j]));
+      Vec2 normal = {context->ground_planes[plane_id].director.y, -context->ground_planes[plane_id].director.x};
+      Vec2 vector = {context->particles[particle_id].position.x - context->ground_planes[plane_id].start_pos.x, context->particles[particle_id].position.y - context->ground_planes[plane_id].start_pos.y};
+      if(abs(dotProduct(normal, vector)) / (sqrt(dotProduct(normal, normal))) <= context->particles[particle_id].radius) {
+        checkContactWithPlane(context, particle_id, &(context->ground_planes[plane_id]));
       }
     }
-    for(int j=0; j < context->num_ground_sphere; j++) {
+    for(int sphere_id = 0; sphere_id < context->num_ground_spheres; sphere_id++) {
       // In order to optimize the code, calculate the distance between the sphere and the particle. If bigger than sum of radius, skip
-      Vec2 vector = substractVector(context->particles[i].position, context->ground_spheres[j].center);
-      if(sqrt(dotProduct(vector, vector)) <= (context->particles[i].radius + context->ground_spheres[j].radius)) {
-        checkContactWithSphere(context, i, &(context->ground_spheres[j]));
+      Vec2 vector = substractVector(context->particles[particle_id].position, context->ground_spheres[sphere_id].center);
+      if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle_id].radius + context->ground_spheres[sphere_id].radius)) {
+        checkContactWithSphere(context, particle_id, &(context->ground_spheres[sphere_id]));
       }
     }
   }
@@ -171,39 +171,37 @@ void addStaticContactConstraints(Context* context) {
 void projectConstraints(Context* context) {
   for(int i = 0; i < context->ground_constraints->num_constraint; i++) {
     GroundConstraint* ground_constraints = context->ground_constraints;
-    context->particles[ground_constraints->constraints[i].origin].next_pos = sumVector(context->particles[ground_constraints->constraints[i].origin].next_pos, ground_constraints->constraints[i].constraint);
+    context->particles[ground_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[ground_constraints->constraints[i].particle_id].next_pos, ground_constraints->constraints[i].vec_constraint);
   }
   for(int i = 0; i < context->particle_constraints->num_constraint; i++) {
     ParticleConstraint* particle_constraints = context->particle_constraints;
-    context->particles[particle_constraints->constraints[i].origin].next_pos = sumVector(context->particles[particle_constraints->constraints[i].origin].next_pos, particle_constraints->constraints[i].constraint);
+    context->particles[particle_constraints->constraints[i].particle_id].next_pos = sumVector(context->particles[particle_constraints->constraints[i].particle_id].next_pos, particle_constraints->constraints[i].vec_constraint);
   }
-  for(int i = 0; i < context->bounds_constraints->num_constraint; i++) {
-    BoundConstraint* bound_constraint = context->bounds_constraints;
-    context->particles[bound_constraint->constraints[i].origin].next_pos = sumVector(context->particles[bound_constraint->constraints[i].origin].next_pos, bound_constraint->constraints[i].constraint);
+  for(int i = 0; i < context->bound_constraints->num_constraint; i++) {
+    BoundConstraint* bound_constraint = context->bound_constraints;
+    context->particles[bound_constraint->constraints[i].particle_id].next_pos = sumVector(context->particles[bound_constraint->constraints[i].particle_id].next_pos, bound_constraint->constraints[i].vec_constraint);
   }
 }
 
 void updateVelocityAndPosition(Context* context, float dt) {
-  for(int i=0; i < context->num_particles; i++) {
+  for(int i = 0; i < context->num_particles; i++) {
     Vec2 pos = context->particles[i].position;
-    Vec2 newPos = context->particles[i].next_pos;
-    Vec2 newVelocity = multiplyByScalar(substractVector(newPos,pos), 1.0/dt);
-    context->particles[i].velocity = newVelocity;
-    context->particles[i].position = newPos;
+    Vec2 next_pos = context->particles[i].next_pos;
+    Vec2 new_velocity = multiplyByScalar(substractVector(next_pos, pos), 1.F / dt);
+    context->particles[i].velocity = new_velocity;
+    context->particles[i].position = next_pos;
   }
-
-
 }
 
 void applyFriction(Context* context, float dt) {
-  for(int i=0; i<context->num_particles; i++) {
+  for(int i = 0; i < context->num_particles; i++) {
     //Apply a constraint for the friction
-    context->particles[i].velocity = substractVector(context->particles[i].velocity, multiplyByScalar(context->particles[i].velocity, 0.6*context->particles[i].inv_mass*dt));
+    context->particles[i].velocity = multiplyByScalar(context->particles[i].velocity, (1.F - 0.6F * context->particles[i].inv_mass * dt));
   }
 }
 
 void deleteContactConstraints(Context* context) {
   context->ground_constraints->num_constraint = 0;
   context->particle_constraints->num_constraint = 0;
-  context->bounds_constraints->num_constraint = 0;
+  context->bound_constraints->num_constraint = 0;
 }
