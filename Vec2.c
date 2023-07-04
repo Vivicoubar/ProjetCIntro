@@ -27,5 +27,6 @@ Vec2 vecNormalize(Vec2 vector) {
 }
 
 Vec2 vecClockwiseNormal(Vec2 vector) {
-  return (Vec2){-vector.y, vector.x};
+  // return (Vec2){-vector.y, vector.x};
+  return (Vec2){vector.y, -vector.x}; //TODO mauvais sens, Corriger dans la creation des plans
 }

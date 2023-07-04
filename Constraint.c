@@ -113,37 +113,40 @@ void addBoundConstraint(Context* context, Vec2 vec_constraint, int particle_id) 
   bound_constraints->num_constraints += 1;
 }
 
-void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* collider) {
-  //TODO : Utiliser des noms de variables explicites et revoir les calculs
-  Vec2 pos_particle = context->particles[particle_id].next_pos;
-  Vec2 pos_plane = collider->start_pos;
-  Vec2 director = collider->director;
-  Vec2 normal_c = {director.y, -director.x};//Should be pointing to the top
-  normal_c = vecNormalize(normal_c); 
-  float scalar_proj_qc = dotProduct(vecSubstract(pos_particle, pos_plane), normal_c);
-  Vec2 q_c = vecSubstract(pos_particle,vecScale(normal_c, scalar_proj_qc));
-  float scalar_proj_c = dotProduct(vecSubstract(pos_particle, q_c), normal_c);
-  
-  float c = scalar_proj_c - context->particles[particle_id].radius;
-  
-  if(c < 0.0F) {
-    addGroundConstraint(context, vecScale(normal_c, - c), particle_id);
+void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* plane_collider) {
+  Particle* particle = &context->particles[particle_id];
+  Vec2 particle_pos = particle->next_pos;
+  float particle_radius = particle->radius;
+  Vec2 plane_start_pos = plane_collider->start_pos;
+  Vec2 plane_director = plane_collider->director;
+
+  Vec2 plane_normal = vecClockwiseNormal(plane_director);
+  Vec2 plane_unit_normal = vecNormalize(plane_normal);
+  float particle_plane_distance  = dotProduct(vecSubstract(particle_pos, plane_start_pos), plane_unit_normal) - particle_radius;
+
+  if(particle_plane_distance < 0.F) {
+    Vec2 vec_constraint = vecScale(plane_unit_normal, - particle_plane_distance);
+    addGroundConstraint(context, vec_constraint, particle_id);
   }
 }
 
-void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider) {
-  //TODO : Utiliser des noms de variables explicites et revoir les calculs
-  Vec2 pos_particle = context->particles[particle_id].next_pos;
-  float radius_particle = context->particles[particle_id].radius;
-  Vec2 center = collider->center;
-  float radius = collider->radius;
-  float sdf = sqrt(dotProduct(vecSubstract(pos_particle,center),vecSubstract(pos_particle,center))) - radius_particle - radius;
-  if(sdf < 0) {
-    Vec2 normal = vecSubstract(pos_particle, center);
-    normal = vecNormalize(normal);
-    addGroundConstraint(context, vecScale(normal, - sdf), particle_id);
+void checkContactWithSphere(Context* context, int particle_id, SphereCollider* sphere_collider) {
+  Particle* particle = &context->particles[particle_id];
+  Vec2 particle_pos = particle->next_pos;
+  float particle_radius = particle->radius;
+  Vec2 sphere_center = sphere_collider->center;
+  float sphere_radius = sphere_collider->radius;
+
+  float particle_sphere_distance = norm(vecSubstract(particle_pos, sphere_center)) - particle_radius - sphere_radius;
+
+  if(particle_sphere_distance < 0.F) { 
+    Vec2 sphere_unit_normal = vecNormalize(vecSubstract(particle_pos, sphere_center));
+
+    Vec2 vec_constraint = vecScale(sphere_unit_normal, - particle_sphere_distance);
+    addGroundConstraint(context, vec_constraint, particle_id);  
   }
 }
+
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
   //TODO : Utiliser des noms de variables explicites et revoir les calculs
