@@ -149,11 +149,11 @@ Context* initializeContext(int capacity)
     context->ground_spheres[i].radius = radius_spheres[i];
   }*/
 
-  /*
+  
   Vec2 start_pos[] = {{-8.0F,-5.0F},{-6.0F,-5.0F}, {-4.0F,-5.0F}, {-2.0F,-5.0F},
                        {-0.0F,-5.0F}, {2.0F,-5.0F}, {4.0F,-5.0F}, {6.0F,-5.0F}, {8.0F,-5.0F}};
   createLineColliders(context, start_pos, num_line, num_simple_sphere);
-  */
+  
   Vec2 origin = {0.0f, 7.0f};
   int num_floors = 9;
   createGaltonBox(context, origin, num_floors, num_simple_sphere + num_line*5);
@@ -162,8 +162,8 @@ Context* initializeContext(int capacity)
   //initialize planes
   context->num_ground_plane = 3;
   context->ground_planes = malloc(context->num_ground_plane*sizeof(PlaneCollider));
-  Vec2 start_pos_planes[] = {{9.5F, -5.0F}, {-9.5F, -5.0F},  {9.5F, 9.5F}};
-  Vec2 director_planes[]  = {{-19.0F, 0.0F}, {0.0F, 14.5F}, {0.0F, -14.5F}};
+  Vec2 start_pos_planes[] = {{9.5F, -5.0F}, {-9.5F, -5.0F},  {9.5F, 13.5F}};
+  Vec2 director_planes[]  = {{-19.0F, 0.0F}, {0.0F, 19.5F}, {0.0F, -19.5F}};
   for (int i = 0; i < context->num_ground_plane; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
@@ -175,9 +175,9 @@ Context* initializeContext(int capacity)
   context->num_boxes = num_boxes;
   context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
   
-  Vec2 directors_1[] = {{0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.2f} ,  {4.5f,0.2f}};
-  Vec2 directors_2[] = {{0.10f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}, {0.0f, 0.2f}};
-  Vec2 centers[] = {{-8.0f,-4.0f}, {-6.0f,-4.0f}, {-4.0f,-4.0f}, {-2.0f,-4.0f}, {-0.0f,-4.0f}, {2.0f,-4.0f}, {4.0f,-4.0f}, {6.0f,-4.0f}, {8.0f,-4.0f}, {-5.0f, 8.5f}, {5.0f, 8.5f}};
+  Vec2 directors_1[] = {{0.0f,1.0f} ,  {-4.5f,-0.3f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.3f} };
+  Vec2 directors_2[] = {{0.10f, 0.0f}, {0.0f, 0.2f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}};
+  Vec2 centers[] = {{-8.0f,-4.0f} , {5.0f, 8.5f}, {-6.0f,-4.0f}, {-4.0f,-4.0f}, {-2.0f,-4.0f}, {-0.0f,-4.0f}, {2.0f,-4.0f}, {4.0f,-4.0f}, {6.0f,-4.0f}, {8.0f,-4.0f}, {-5.0f, 8.5f}};
   for (int i=0; i<num_boxes; i++) {
     context->box_collider[i].center = centers[i];
     context->box_collider[i].director1 = directors_1[i];
@@ -342,7 +342,7 @@ void applyFriction(Context* context, float dt)
 {
   for(int i=0; i<context->num_particles; i++) {
     //Apply a constraint for the friction
-    context->particles[i].velocity = substractVector(context->particles[i].velocity, multiplyByScalar(context->particles[i].velocity, 0.6*context->particles[i].inv_mass*dt));
+    context->particles[i].velocity = substractVector(context->particles[i].velocity, multiplyByScalar(context->particles[i].velocity, 0.2*context->particles[i].inv_mass*dt));
   }
 }
 
@@ -394,50 +394,58 @@ void checkContactWithParticle(Context* context, int particle_id1, int particle_i
 }
 
 void checkContactWithBox(Context* context, int particle_id, int box_id) {
-  Vec2 director1 = (context->box_collider[box_id].director1);
-  Vec2 director2 = (context->box_collider[box_id].director2);
+  Vec2 director1 = context->box_collider[box_id].director1;
+  Vec2 director2 = context->box_collider[box_id].director2;
   Vec2 center = context->box_collider[box_id].center;
 
-  float half_width = length(director2) / 2.0f;
-  float half_height = length(director1) / 2.0f;
+  float width = length(director2);
+  float height = length(director1);
   float particle_radius = context->particles[particle_id].radius;
-  float particle_x = context->particles[particle_id].next_pos.x;
-  float particle_y = context->particles[particle_id].next_pos.y;
 
-  float dx = fabs(particle_x - center.x) - (2*half_width + particle_radius);
-  float dy = fabs(particle_y - center.y) - (2*half_height + particle_radius);
+  // Coords in the (ux, uy) base
+  float particle_x = context->particles[particle_id].position.x;
+  float particle_y = context->particles[particle_id].position.y;
+
+  // Coords in the (director1, director2) base
+  float particle_1 = particle_x * normalize(director1).x + particle_y * normalize(director2).x;
+  float particle_2 = particle_x * normalize(director1).y + particle_y * normalize(director2).y;
+  float center1 = center.x * normalize(director1).x + center.y * normalize(director2).x;
+  float center2 = center.x * normalize(director1).y + center.y * normalize(director2).y;
+
+  float d1 = fabs(particle_1 - center1) - height - particle_radius;
+  float d2 = fabs(particle_2 - center2) - width - particle_radius;
 
   // Check if the particle is colliding with the box
-  if (dx <= 0.0f && dy <= 0.0f) {
+  if (d1 <= 0.0f && d2 <= 0.0f) {
     // Calculate the constraint vector
-    float constraint_x = 0.0f;
-    float constraint_y = 0.0f;
+    float constraint_1 = 0.0f;
+    float constraint_2 = 0.0f;
 
-    if (dx > dy) {
-      if (particle_x < center.x) {
-        constraint_x = +dx;
-      }
-      else {
-        constraint_x = -dx;
-      }
-      constraint_y = 0.0f;
+    // Check each face of the box and assign the constraint accordingly
+    if (particle_1 < center1 - height) {
+      // Bottom face
+      constraint_1 = (d1);
+    } else if(particle_1 > center1 + height) {
+      // Top face
+      constraint_1 = -d1;
     }
-    else {
-      constraint_x = 0.0f;
-      if (particle_y < center.y) {
-        constraint_y = dy;
-      }
-      else {
-        constraint_y = -dy;
-      }
+
+    if (particle_2 < center2 - width) {
+      // Left face
+      constraint_2 = (d2);
+    } else if (particle_2 > center2 + width) {
+      // Right face
+      constraint_2 = -d2;
     }
+   // Apply the constraint vector to move the particle outside the box in the base (x, y)
+    Vec2 total_constraint;
+    total_constraint.x = constraint_1 * normalize(director1).x + constraint_2 * normalize(director2).x;
+    total_constraint.y = constraint_1 * normalize(director1).y + constraint_2 * normalize(director2).y;
 
     // Apply the constraint vector to move the particle outside the box
-    Vec2 total_constraint = { constraint_x, constraint_y };
     addGroundConstraint(context, total_constraint, particle_id);
   }
 }
-
 
 
 
