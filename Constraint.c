@@ -147,17 +147,6 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* s
   }
 }
 
-// void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-//   //TODO : Utiliser des noms de variables explicites et revoir les calculs
-//   Vec2 xij = vecSubstract(context->particles[particle_id1].position, context->particles[particle_id2].position);
-//   float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
-//   if (c < 0) {
-//       float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass + context->particles[particle_id2].inv_mass) * c;
-//       Vec2 constraint = vecScale(xij, - di * sqrt(dotProduct(xij, xij)));
-//       addParticleConstraint(context, constraint, particle_id1);
-//   }
-// }
-
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
   Particle particle1 = context->particles[particle_id1];
   Particle particle2 = context->particles[particle_id2];
