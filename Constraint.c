@@ -147,43 +147,67 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* s
   }
 }
 
+// void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
+//   //TODO : Utiliser des noms de variables explicites et revoir les calculs
+//   Vec2 xij = vecSubstract(context->particles[particle_id1].position, context->particles[particle_id2].position);
+//   float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
+//   if (c < 0) {
+//       float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass + context->particles[particle_id2].inv_mass) * c;
+//       Vec2 constraint = vecScale(xij, - di * sqrt(dotProduct(xij, xij)));
+//       addParticleConstraint(context, constraint, particle_id1);
+//   }
+// }
 
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-  //TODO : Utiliser des noms de variables explicites et revoir les calculs
-  Vec2 xij = vecSubstract(context->particles[particle_id1].position, context->particles[particle_id2].position);
-  float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
-  if (c < 0) {
-      float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass + context->particles[particle_id2].inv_mass) * c;
-      Vec2 constraint = vecScale(xij, - di * sqrt(dotProduct(xij, xij)));
-      addParticleConstraint(context, constraint, particle_id1);
+  Particle particle1 = context->particles[particle_id1];
+  Particle particle2 = context->particles[particle_id2];
+  Vec2 particle1_pos = particle1.position;
+  float particle1_radius = particle1.radius;
+  Vec2 particle2_pos = particle2.position;
+  float particle2_radius = particle2.radius;
+
+  float particles_distance = norm(vecSubstract(particle1_pos, particle2_pos)) - particle1_radius - particle2_radius;
+
+  if (particles_distance < 0) {
+    float inv_m1 = particle1.inv_mass;
+    float inv_m2 = particle2.inv_mass;
+    float inv_mass_ratio1 = inv_m1 / (inv_m1  + inv_m2);
+    float inv_mass_ratio2 = inv_m2 / (inv_m1  + inv_m2);
+    
+    Vec2 particle2_unit_normal = vecNormalize(vecSubstract(particle1_pos, particle2_pos));
+    
+
+    float particles_center_distance = norm(vecSubstract(particle1_pos, particle2_pos));    
+    Vec2 wrong_constraint = vecScale(particle2_unit_normal, - inv_mass_ratio1 * particles_distance * particles_center_distance * particles_center_distance);
+    // Vec2 constraint = vecScale(particle2_unit_normal, - inv_mass_ratio1 * particles_distance);
+
+    addParticleConstraint(context, wrong_constraint, particle_id1);
   }
 }
 
 void checkBoundConstraint(Context* context, int bound_id) {
-  //TODO : Utiliser des noms de variables explicites et revoir les calculs
   BoundConstraint* bound_constraints = context->bound_constraints;
   int particle_id1 = bound_constraints->bounds[bound_id].particle1;
   int particle_id2 = bound_constraints->bounds[bound_id].particle2;
   Particle particle1 = context->particles[particle_id1];
   Particle particle2 = context->particles[particle_id2];
-
+  
   float stiffness = bound_constraints->bounds[bound_id].stiffness;
   float target_distance = bound_constraints->bounds[bound_id].target_distance;
-  
+  Vec2 particle1_pos = particle1.next_pos;
+  Vec2 particle2_pos = particle2.next_pos;
   float inv_m1 = particle1.inv_mass;
   float inv_m2 = particle2.inv_mass;
   
-  Vec2 x_21 = vecSubstract(particle1.next_pos, particle2.next_pos);
-  float norm_x_21 = sqrt(dotProduct(x_21, x_21));
-  float c = norm_x_21 - target_distance;
+  float distance_from_equilibrium = norm(vecSubstract(particle1_pos, particle2_pos)) - target_distance;
   float beta = stiffness;
-
-  float factor1 = - inv_m1 / (inv_m1 + inv_m2) * beta * c / norm_x_21;
-  Vec2 constraint1 = vecScale(x_21, factor1);
+  float inv_mass_ratio1 = inv_m1 / (inv_m1  + inv_m2);
+  float inv_mass_ratio2 = inv_m2 / (inv_m1  + inv_m2);
   
-  float factor2 = inv_m2 / (inv_m1 + inv_m2) * beta * c / norm_x_21;
-  Vec2 constraint2 = vecScale(x_21, factor2);
-
+  Vec2 particle2_unit_normal = vecNormalize(vecSubstract(particle1_pos, particle2_pos));
+  Vec2 constraint1 = vecScale(particle2_unit_normal, - inv_mass_ratio1 * beta * distance_from_equilibrium);
+  Vec2 constraint2 = vecScale(particle2_unit_normal, inv_mass_ratio2 * beta * distance_from_equilibrium);
+  
   addBoundConstraint(context, constraint1, particle_id1);
   addBoundConstraint(context, constraint2, particle_id2);
 }
