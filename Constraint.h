@@ -47,6 +47,13 @@ typedef struct ParticleConstraint {
   int capacity_constraints;
 } ParticleConstraint;
 
+typedef struct BoxCollider {
+  Vec2 center;
+  Vec2 director1;
+  Vec2 director2;
+} BoxCollider;
+
+
 GroundConstraint* initializeGroundConstraint(int capacity);
 ParticleConstraint* initializeParticleConstraint(int capacity);
 BoundConstraint* initializeBoundConstraint(int capacity_bounds, int capacity_constraints);
@@ -60,5 +67,6 @@ void checkContactWithPlane(Context* context, int particle_id, PlaneCollider* col
 void checkContactWithSphere(Context* context, int particle_id, SphereCollider* collider);
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2);
 void checkBoundConstraint(Context* context, int bound_id);
+void checkContactWithBox(Context* context, int particle_id, int box_id);
 
 #endif

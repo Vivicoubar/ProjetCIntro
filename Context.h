@@ -14,6 +14,8 @@ typedef struct Context {
   SphereCollider* ground_spheres;
   int num_ground_planes;
   PlaneCollider* ground_planes;
+  int num_boxes;
+  BoxCollider* box_collider;
 
   //Constraints
   GroundConstraint* ground_constraints;
@@ -43,3 +45,5 @@ void projectConstraints(Context* context);
 void updateVelocityAndPosition(Context* context, float dt);
 void applyFriction(Context* context, float );
 void deleteContactConstraints(Context* context);
+void createLineColliders(Context* context, Vec2 * start_pos, int length, int sphere_num);
+void createGaltonBox(Context* context, Vec2 start_pos, int lines, int sphere_num); 

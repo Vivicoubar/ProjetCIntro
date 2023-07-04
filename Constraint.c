@@ -184,3 +184,52 @@ void checkBoundConstraint(Context* context, int bound_id) {
   addBoundConstraint(context, constraint1, particle_id1);
   addBoundConstraint(context, constraint2, particle_id2);
 }
+
+
+///////////////////////////////////
+
+
+void checkContactWithBox(Context* context, int particle_id, int box_id) {
+  Vec2 director1 = (context->box_collider[box_id].director1);
+  Vec2 director2 = (context->box_collider[box_id].director2);
+  Vec2 center = context->box_collider[box_id].center;
+
+  float half_width = norm(director2) / 2.0f;
+  float half_height = norm(director1) / 2.0f;
+  float particle_radius = context->particles[particle_id].radius;
+  float particle_x = context->particles[particle_id].next_pos.x;
+  float particle_y = context->particles[particle_id].next_pos.y;
+
+  float dx = fabs(particle_x - center.x) - (2*half_width + particle_radius);
+  float dy = fabs(particle_y - center.y) - (2*half_height + particle_radius);
+
+  // Check if the particle is colliding with the box
+  if (dx <= 0.0f && dy <= 0.0f) {
+    // Calculate the constraint vector
+    float constraint_x = 0.0f;
+    float constraint_y = 0.0f;
+
+    if (dx > dy) {
+      if (particle_x < center.x) {
+        constraint_x = +dx;
+      }
+      else {
+        constraint_x = -dx;
+      }
+      constraint_y = 0.0f;
+    }
+    else {
+      constraint_x = 0.0f;
+      if (particle_y < center.y) {
+        constraint_y = dy;
+      }
+      else {
+        constraint_y = -dy;
+      }
+    }
+
+    // Apply the constraint vector to move the particle outside the box
+    Vec2 total_constraint = { constraint_x, constraint_y };
+    addGroundConstraint(context, total_constraint, particle_id);
+  }
+}

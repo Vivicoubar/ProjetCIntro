@@ -94,6 +94,11 @@ PlaneCollider getGroundPlaneCollider(Context* context, int id) {
   return context->ground_planes[id];
 }
 
+BoxCollider getBoxCollider(Context* context, int id)
+{
+  return context->box_collider[id];
+}
+
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation) {
   applyExternalForce(context, dt);
   dampVelocities(context);
@@ -208,8 +213,46 @@ void applyFriction(Context* context, float dt) {
   }
 }
 
+
 void deleteContactConstraints(Context* context) {
   context->ground_constraints->num_constraints = 0;
   context->particle_constraints->num_constraints = 0;
   context->bound_constraints->num_constraints = 0;
 }
+
+
+
+////////////////////////////////////////////////////
+
+
+void createGaltonBox(Context* context, Vec2 start_pos, int lines, int sphere_num) {
+  float radius = 0.2F;
+  float distance = 1.0F;
+  int count = 0;
+  for (int i =0; i < lines; i++) {
+    for(int j =0; j <= i; j++) {
+      int index = sphere_num + count;
+      count ++;
+      Vec2 pos = {start_pos.x - distance*i + distance*2*j, start_pos.y - distance*i};
+      context->ground_spheres[index].center = pos;
+      context->ground_spheres[index].radius = radius;
+    }
+
+  }
+}
+
+void createLineColliders(Context* context, Vec2 * start_pos, int length, int sphere_num) {
+  float radius = 0.2F;
+  int line_height = 5;
+  for (int i =0; i<length; i++) {
+    for (int j =0; j<line_height; j++) {
+      int index = sphere_num + i*line_height + j; 
+      Vec2 pos = {start_pos[i].x, start_pos[i].y + j*2*radius + radius};
+      context->ground_spheres[index].center = pos;
+      context->ground_spheres[index].radius = radius;
+    }
+  }
+}
+
+
+
