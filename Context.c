@@ -54,37 +54,37 @@ Context* initializeContext(int capacity) {
 }
 
 void addParticle(Context* context, float x, float y, float radius, float mass, int draw_id) {
-    assert(context->num_particles < context->capacity_particles); // currently no resize in context
-    
-    //TODO Choisir entre augmenter le nombre de particules ou fermer volontairement la fenetre en liberant la memoire
+  assert(context->num_particles < context->capacity_particles); // currently no resize in context
+  
+  //TODO Choisir entre augmenter le nombre de particules ou fermer volontairement la fenetre en liberant la memoire
 
-    // if (context->num_particles >= context->capacity_particles) {
-    //     printf("Erreur : capacite maximale de particules atteinte\n");
-    //     free_memory(context);
-    //     exit(0);
-    // }
+  // if (context->num_particles >= context->capacity_particles) {
+  //     printf("Erreur : capacite maximale de particules atteinte\n");
+  //     free_memory(context);
+  //     exit(0);
+  // }
 
-    context->particles[context->num_particles].position.x = x;
-    context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.F;
-    context->particles[context->num_particles].velocity.y = 0.F;
-    context->particles[context->num_particles].inv_mass = 1.F/mass;
-    context->particles[context->num_particles].radius = radius;
-    context->particles[context->num_particles].draw_id = draw_id;
-    context->num_particles += 1;
+  context->particles[context->num_particles].position.x = x;
+  context->particles[context->num_particles].position.y = y;
+  context->particles[context->num_particles].velocity.x = 0.F;
+  context->particles[context->num_particles].velocity.y = 0.F;
+  context->particles[context->num_particles].inv_mass = 1.F/mass;
+  context->particles[context->num_particles].radius = radius;
+  context->particles[context->num_particles].draw_id = draw_id;
+  context->num_particles += 1;
 }
 
 int addParticleWithId(Context* context, float x, float y, float radius, float mass, int draw_id) {
-    assert(context->num_particles < context->capacity_particles); // currently no resize in context
-    context->particles[context->num_particles].position.x = x;
-    context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.F;
-    context->particles[context->num_particles].velocity.y = 0.F;
-    context->particles[context->num_particles].inv_mass = 1.F/mass;
-    context->particles[context->num_particles].radius = radius;
-    context->particles[context->num_particles].draw_id = draw_id;
-    context->num_particles += 1;
-    return context->num_particles -1;
+  assert(context->num_particles < context->capacity_particles); // currently no resize in context
+  context->particles[context->num_particles].position.x = x;
+  context->particles[context->num_particles].position.y = y;
+  context->particles[context->num_particles].velocity.x = 0.F;
+  context->particles[context->num_particles].velocity.y = 0.F;
+  context->particles[context->num_particles].inv_mass = 1.F/mass;
+  context->particles[context->num_particles].radius = radius;
+  context->particles[context->num_particles].draw_id = draw_id;
+  context->num_particles += 1;
+  return context->num_particles -1;
 }
 
 void setDrawId(Context* context, int sphere_id, int draw_id) {
@@ -210,7 +210,8 @@ void deleteContactConstraints(Context* context) {
 
 void free_array(void* array) {
     if (array != NULL) {
-        free(array);
+      free(array);
+      array = NULL;
     }
 }
 

@@ -105,7 +105,7 @@ c_lib.initializeParticleConstraint.restype = POINTER(PARTICLE_CONSTRAINT)
 class ParticleUI :
     def __init__(self) :
         # create drawing context
-        self.context = c_lib.initializeContext(20)
+        self.context = c_lib.initializeContext(200)
         self.ground_constraint = c_lib.initializeGroundConstraint(300)
         self.particle_constraint = c_lib.initializeParticleConstraint(300)
         self.bounds_constraint = c_lib.initializeBoundConstraint(300)

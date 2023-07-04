@@ -36,79 +36,78 @@ BoundConstraint* initializeBoundConstraint(int capacity_bounds, int capacity_con
 }
 
 void addBound(Context* context, float x, float y, float radius, float mass, int draw_id1, int draw_id2, int draw_id3, int draw_id4) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
-  if (context->bound_constraints->num_constraints + 6 >= context->bound_constraints->capacity_constraints) {
+  BoundConstraint* bound_constraints = context->bound_constraints;
+  if (bound_constraints->num_constraints + 6 >= bound_constraints->capacity_constraints) {
     // Si le tableau est plein, augmenter la capacité
-    int new_capacity = context->bound_constraints->capacity_constraints * 2;
-    context->bound_constraints->capacity_constraints = new_capacity;
-    context->bound_constraints->constraints = realloc(context->bound_constraints->constraints, new_capacity * sizeof(Constraint));
+    int new_capacity = bound_constraints->capacity_constraints * 2;
+    bound_constraints->capacity_constraints = new_capacity;
+    bound_constraints->constraints = realloc(bound_constraints->constraints, new_capacity * sizeof(Constraint));
   }
   // Ajouter la nouvelle liaison
-    int num1 = addParticleWithId(context, x - radius, y - radius, radius, mass, draw_id1);
-    int num2 = addParticleWithId(context, x - radius, y + radius, radius, mass, draw_id2);
-    int num3 = addParticleWithId(context, x + radius, y + radius, radius, mass, draw_id3);
-    int num4 = addParticleWithId(context, x + radius, y - radius, radius, mass, draw_id4);
-    float stiffness = 0.3F;
-    Bound bound1 = {num1, num2, radius * 2, stiffness};
-    Bound bound2 = {num2, num3, radius * 2, stiffness};
-    Bound bound3 = {num3, num4, radius * 2, stiffness};
-    Bound bound4 = {num4, num1, radius * 2, stiffness};
-    Bound bound5 = {num2, num4, radius * 2 * sqrt(2), stiffness};
-    Bound bound6 = {num1, num3, radius * 2 * sqrt(2), stiffness};
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound1;
-    context->bound_constraints->num_bounds += 1;
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound2;
-    context->bound_constraints->num_bounds += 1;
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound3;
-    context->bound_constraints->num_bounds += 1;
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound4;
-    context->bound_constraints->num_bounds += 1;
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound5;
-    context->bound_constraints->num_bounds += 1;
-    context->bound_constraints->bounds[context->bound_constraints->num_bounds] = bound6;
-    context->bound_constraints->num_bounds += 1;
+  int num1 = addParticleWithId(context, x - radius, y - radius, radius, mass, draw_id1);
+  int num2 = addParticleWithId(context, x - radius, y + radius, radius, mass, draw_id2);
+  int num3 = addParticleWithId(context, x + radius, y + radius, radius, mass, draw_id3);
+  int num4 = addParticleWithId(context, x + radius, y - radius, radius, mass, draw_id4);
+  float stiffness = 0.3F;
+  
+  Bound bound1 = {num1, num2, radius * 2, stiffness};
+  Bound bound2 = {num2, num3, radius * 2, stiffness};
+  Bound bound3 = {num3, num4, radius * 2, stiffness};
+  Bound bound4 = {num4, num1, radius * 2, stiffness};
+  Bound bound5 = {num2, num4, radius * 2 * sqrt(2), stiffness};
+  Bound bound6 = {num1, num3, radius * 2 * sqrt(2), stiffness};
+
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound1;
+  bound_constraints->num_bounds += 1;
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound2;
+  bound_constraints->num_bounds += 1;
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound3;
+  bound_constraints->num_bounds += 1;
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound4;
+  bound_constraints->num_bounds += 1;
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound5;
+  bound_constraints->num_bounds += 1;
+  bound_constraints->bounds[bound_constraints->num_bounds] = bound6;
+  bound_constraints->num_bounds += 1;
 }
 
 void addGroundConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
-  if (context->ground_constraints->num_constraints >= context->ground_constraints->capacity_constraints) {
+  GroundConstraint* ground_constraints = context->ground_constraints;
+  if (ground_constraints->num_constraints >= ground_constraints->capacity_constraints) {
     // Si le tableau est plein, augmenter la capacité
-    int new_capacity = context->ground_constraints->capacity_constraints * 2;
-    context->ground_constraints->capacity_constraints = new_capacity;
-    context->ground_constraints->constraints = realloc(context->ground_constraints->constraints, new_capacity * sizeof(Constraint));
+    int new_capacity = ground_constraints->capacity_constraints * 2;
+    ground_constraints->capacity_constraints = new_capacity;
+    ground_constraints->constraints = realloc(ground_constraints->constraints, new_capacity * sizeof(Constraint));
   }
   // Ajouter la nouvelle contrainte
-  GroundConstraint* ground_constraints = context->ground_constraints;
   ground_constraints->constraints[ground_constraints->num_constraints].vec_constraint = vec_constraint;
   ground_constraints->constraints[ground_constraints->num_constraints].particle_id = particle_id;
   ground_constraints->num_constraints += 1;
 }
 
 void addParticleConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
-  if (context->particle_constraints->num_constraints >= context->particle_constraints->capacity_constraints) {
+  ParticleConstraint* particle_constraints = context->particle_constraints;
+  if (particle_constraints->num_constraints >= particle_constraints->capacity_constraints) {
     // Si le tableau est plein, augmenter la capacité
-    int new_capacity = context->particle_constraints->capacity_constraints * 2;
-    context->particle_constraints->capacity_constraints = new_capacity;
-    context->particle_constraints->constraints = realloc(context->particle_constraints->constraints, new_capacity * sizeof(Constraint));
+    int new_capacity = particle_constraints->capacity_constraints * 2;
+    particle_constraints->capacity_constraints = new_capacity;
+    particle_constraints->constraints = realloc(particle_constraints->constraints, new_capacity * sizeof(Constraint));
   }
   // Ajouter la nouvelle contrainte
-  ParticleConstraint* particle_constraints = context->particle_constraints;
   particle_constraints->constraints[particle_constraints->num_constraints].vec_constraint = vec_constraint;
   particle_constraints->constraints[particle_constraints->num_constraints].particle_id = particle_id;
   particle_constraints->num_constraints += 1;
 }
 
 void addBoundConstraint(Context* context, Vec2 vec_constraint, int particle_id) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
-  if (context->bound_constraints->num_constraints >= context->bound_constraints->capacity_constraints) {
+  BoundConstraint* bound_constraints = context->bound_constraints;
+  if (bound_constraints->num_constraints >= bound_constraints->capacity_constraints) {
     // Si le tableau est plein, augmenter la capacité
-    int new_capacity = context->bound_constraints->capacity_constraints * 2;
-    context->bound_constraints->capacity_constraints = new_capacity;
-    context->bound_constraints->constraints = realloc(context->bound_constraints->constraints, new_capacity * sizeof(Constraint));
+    int new_capacity = bound_constraints->capacity_constraints * 2;
+    bound_constraints->capacity_constraints = new_capacity;
+    bound_constraints->constraints = realloc(bound_constraints->constraints, new_capacity * sizeof(Constraint));
   }
   // Ajouter la nouvelle contrainte
-  BoundConstraint* bound_constraints = context->bound_constraints;
   bound_constraints->constraints[bound_constraints->num_constraints].vec_constraint = vec_constraint;
   bound_constraints->constraints[bound_constraints->num_constraints].particle_id = particle_id;
   bound_constraints->num_constraints += 1;
@@ -159,13 +158,14 @@ void checkContactWithParticle(Context* context, int particle_id1, int particle_i
 
 void checkBoundConstraint(Context* context, int bound_id) {
   //TODO : Utiliser des noms de variables explicites et revoir les calculs
-  int particle_id1 = context->bound_constraints->bounds[bound_id].particle1;
-  int particle_id2 = context->bound_constraints->bounds[bound_id].particle2;
+  BoundConstraint* bound_constraints = context->bound_constraints;
+  int particle_id1 = bound_constraints->bounds[bound_id].particle1;
+  int particle_id2 = bound_constraints->bounds[bound_id].particle2;
   Particle particle1 = context->particles[particle_id1];
   Particle particle2 = context->particles[particle_id2];
 
-  float stiffness = context->bound_constraints->bounds[bound_id].stiffness;
-  float target_distance = context->bound_constraints->bounds[bound_id].target_distance;
+  float stiffness = bound_constraints->bounds[bound_id].stiffness;
+  float target_distance = bound_constraints->bounds[bound_id].target_distance;
   
   float inv_m1 = particle1.inv_mass;
   float inv_m2 = particle2.inv_mass;
