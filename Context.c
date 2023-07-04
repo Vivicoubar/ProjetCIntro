@@ -19,10 +19,10 @@ Context* initializeContext(int capacity) {
   //initialize planes
   context->num_ground_planes = NUM_GROUND_PLANES;
   context->ground_planes = malloc(context->num_ground_planes * sizeof(PlaneCollider));
-  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F},
-                                              {-9.5F, -7.5F}, {11.5F, -5.5F}};
-  Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.F, 0.F}, {0.F, 13.F}, {0.F, -13.F},
-                                              {23.F, 0.F}, {-2.0F, 2.F}, {-2.F, -2.F}};
+  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{-9.5F, -7.5F}, {-11.5F, 7.5F}, {11.5F, -5.5F}, 
+                                              {11.5F, 7.5F}, {-11.5F, -5.5F}, {9.5F, -7.5F}};
+  Vec2 director_planes[NUM_GROUND_PLANES]  = {{19.F, 0.F}, {0.F, -13.F}, {0.F, 13.F},
+                                              {-23.F, 0.F}, {2.F, -2.F}, {2.F, 2.F}};
   for (int i = 0; i < context->num_ground_planes; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
