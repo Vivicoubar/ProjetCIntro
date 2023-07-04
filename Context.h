@@ -43,3 +43,5 @@ void projectConstraints(Context* context);
 void updateVelocityAndPosition(Context* context, float dt);
 void applyFriction(Context* context, float );
 void deleteContactConstraints(Context* context);
+
+void free_memory(Context* context);
