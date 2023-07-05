@@ -8,6 +8,7 @@
 
 #define NUM_GROUND_PLANES 6
 #define NUM_GROUND_SPHERES 21
+#define NUM_BOXES 11
 
 Context* initializeContext(int capacity) {
   // Allocate memory for a Context structure
@@ -73,15 +74,16 @@ Context* initializeContext(int capacity) {
   context->bound_constraints = initializeBoundConstraint(capacity, capacity);
   
    //initialize Boxes.
-  
-  int num_boxes = 11;
-  context->num_boxes = num_boxes;
+  context->num_boxes = NUM_BOXES;
   context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
   
-  Vec2 directors_1[] = {{0.0f,1.0f} ,  {-4.5f,-0.5f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.5f} };
-  Vec2 directors_2[] = {{0.10f, 0.0f}, {0.0f, 0.2f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}};
-  Vec2 centers[] = {{-8.0f,-6.5f} , {6.5f, 5.5f}, {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f}, {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}, {-6.0f, 5.5f}};
-  for (int i=0; i<num_boxes; i++) {
+  Vec2 directors_1[] = {{0.0f,1.0f} ,  {-4.5f,-0.5f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, 
+                        {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.5f} };
+  Vec2 directors_2[] = {{0.10f, 0.0f}, {0.0f, 0.2f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f},
+                         {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}};
+  Vec2 centers[] = {{-8.0f,-6.5f} , {6.5f, 5.5f}, {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f},
+                     {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}, {-6.0f, 5.5f}};
+  for (int i= 0 ; i<NUM_BOXES; i++) {
     context->box_collider[i].center = centers[i];
     context->box_collider[i].director1 = directors_1[i];
     context->box_collider[i].director2 = directors_2[i];
@@ -144,8 +146,7 @@ Particle getParticle(Context* context, int id) {
   return context->particles[id];
 }
   
-  BoxCollider getBoxCollider(Context* context, int id)
-{
+  BoxCollider getBoxCollider(Context* context, int id) {
   return context->box_collider[id];
 }
 
@@ -185,8 +186,7 @@ void applyExternalForce(Context* context, float dt) {
   }
 }
 
-void dampVelocities(Context* context) {
-}
+void dampVelocities(Context* context) {}
 
 void updateExpectedPosition(Context* context, float dt) {
   for (int i = 0; i < context->num_particles; i++) {

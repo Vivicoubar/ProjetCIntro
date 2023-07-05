@@ -147,17 +147,6 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* s
   }
 }
 
-// void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
-//   //TODO : Utiliser des noms de variables explicites et revoir les calculs
-//   Vec2 xij = vecSubstract(context->particles[particle_id1].position, context->particles[particle_id2].position);
-//   float c = sqrt(dotProduct(xij,xij)) - context->particles[particle_id1].radius - context->particles[particle_id2].radius;
-//   if (c < 0) {
-//       float di = context->particles[particle_id1].inv_mass / (context->particles[particle_id1].inv_mass + context->particles[particle_id2].inv_mass) * c;
-//       Vec2 constraint = vecScale(xij, - di * sqrt(dotProduct(xij, xij)));
-//       addParticleConstraint(context, constraint, particle_id1);
-//   }
-// }
-
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
   Particle particle1 = context->particles[particle_id1];
   Particle particle2 = context->particles[particle_id2];
@@ -212,10 +201,6 @@ void checkBoundConstraint(Context* context, int bound_id) {
   addBoundConstraint(context, constraint2, particle_id2);
 }
 
-
-///////////////////////////////////
-
-
 void checkContactWithBox(Context* context, int particle_id, int box_id) {
   // Get the directors and center of the box collider
   Vec2 director1 = context->box_collider[box_id].director1;
@@ -231,42 +216,51 @@ void checkContactWithBox(Context* context, int particle_id, int box_id) {
   float particle_x = context->particles[particle_id].next_pos.x;
   float particle_y = context->particles[particle_id].next_pos.y;
 
+  // Project the center in the base of vectors director 1 and 2
+  float proj_1 = particle_x * vecNormalize(director1).x + particle_y * vecNormalize(director2).x;
+  float proj_2 = particle_x * vecNormalize(director1).y + particle_y * vecNormalize(director2).y;
+  float proj_center_1 = center.x * vecNormalize(director1).x + center.y * vecNormalize(director2).x;
+  float proj_center_2 = center.x * vecNormalize(director1).y + center.y * vecNormalize(director2).y;
+
   // Calculate the distances between particle and box edges
-  float dx = fabs(particle_x - center.x) - (2 * half_width + particle_radius);
-  float dy = fabs(particle_y - center.y) - (2 * half_height + particle_radius);
-
-  // Check if the particle is colliding with the box
-  if (dx <= 0.0f && dy <= 0.0f) {
-    // Calculate the constraint vector
-    float constraint_x = 0.0f;
-    float constraint_y = 0.0f;
-
-    if (dx > dy) {
-  // If the collision is primarily in the x-direction
-  if (particle_x < center.x) {
-    // If the particle is to the left of the box center, move it to the right
-    constraint_x = +dx;
-  }
-  else {
-    // If the particle is to the right of the box center, move it to the left
-    constraint_x = -dx;
-  }
-}
-else {
-  // If the collision is primarily in the y-direction
-  if (particle_y < center.y) {
-    // If the particle is above the box center, move it downward
-    constraint_y = dy;
-  }
-  else {
-    // If the particle is below the box center, move it upward
-    constraint_y = -dy;
-  }
-}
-
+  float d1 = fabs(proj_1 - proj_center_1) - (2 * half_height + particle_radius);
+  float d2 = fabs(proj_2 - proj_center_2) - (2 * half_width + particle_radius);
+  
+  if (d1 <= 0.0f && d2 <= 0.0f) {
+    //Calculate the constraint vector:
+    float constraint_1 = 0.0f;
+    float constraint_2 = 0.0f;
+    if (d1 > d2) {  
+      // If the collision is primarily in the x-direction
+      if (proj_1 < proj_center_1) {
+        // If the particle is to the left of the box center, move it to the right 
+        constraint_1 = +d1;
+      }
+      else {
+        // If the particle is to the right of the box center, move it to the left
+        constraint_1 = -d1;
+      }
+    }
+    else {
+      // If the collision is primarily in the y-direction
+      if (proj_2 < proj_center_2) {
+        // If the particle is above the box center, move it downward
+        constraint_2 = d2;
+      }
+      else {
+        // If the particle is below the box center, move it upward
+        constraint_2 = -d2;
+      }
+    }
 
     // Apply the constraint vector to move the particle outside the box
-    Vec2 total_constraint = { constraint_x, constraint_y };
+    Vec2 proj_total_constraint = { constraint_1, constraint_2 };
+    // Calculate the projection of `proj_total_constraint` onto the base (x, y)
+    float total_constraint_x = proj_total_constraint.x * vecNormalize(director1).x + proj_total_constraint.y * vecNormalize(director2).x;
+    float total_constraint_y = proj_total_constraint.x * vecNormalize(director1).y + proj_total_constraint.y * vecNormalize(director2).y;
+
+    // Store the projected constraint in `total_constraint`
+    Vec2 total_constraint = {total_constraint_x, total_constraint_y};
     addGroundConstraint(context, total_constraint, particle_id);
   }
 }
