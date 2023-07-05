@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vec2.h"
+#include "IntArrayGrid.h"
 #include "Particle.h"
 #include "Constraint.h"
 

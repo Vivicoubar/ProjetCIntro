@@ -153,6 +153,46 @@ void addDynamicContactConstraints(Context* context) {
   }
 }
 
+void useGrid(Context* context) {
+  // Crer la grille
+  IntArrayGrid* grid;
+  grid = createGrid(12., 8., 0.4);
+  
+  // Ajouter les particules dans la grille
+  for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
+    Particle* particle = &context->particles[particle_id];
+    Vec2 particle_pos = particle->next_pos;
+    int particle_row = (int) (particle_pos.x / grid->cell_size);
+    int particle_col = (int) (particle_pos.y / grid->cell_size);   
+    // addCellValue(grid, particle_row, particle_col, particle_id); //TODO fct a def
+  }
+
+  // Parcourir la grille sans parcourir les bords
+  for (int x = 1; x < grid->num_rows - 1; x++) {
+    for (int y = 1; y < grid->num_cols - 1; y++) {
+      int* cell = getCellValues(grid, x, y);
+      int num_cell_values = getNumCellValues(grid, x, y);
+
+      // Parcourir les cases autours
+      for (int dx = -1; dx <= 1, dx++) {
+        for (int dy = -1; dy <= 1, dy++) {
+          int* other_cell = getCellValues(grid, x + dx, y + dy);
+          int num_other_cell_values = getNumCellValues(grid, x + dx, y + dy);
+          
+          // Checker les collisions
+          for (int particle1_id = 0; particle1_id < num_cell_values; particle1_id++) {
+            for (int particle2_id = 0; particle2_id < num_other_cell_values; particle2_id++) {
+              if (particle1_id != particle2_id) {
+                checkContactWithParticle(context, particle1_id, particle2_id);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 void addStaticContactConstraints(Context* context) {
   for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
     for(int plane_id = 0; plane_id < context->num_ground_planes; plane_id++) {

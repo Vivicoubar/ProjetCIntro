@@ -36,19 +36,21 @@ void destroyGrid(IntArrayGrid* grid) {
     free(grid);
 }
 
-void setCellValues(IntArrayGrid* grid, int row, int col, int* values, int num_values) {
+void setCellValues(IntArrayGrid* grid, int row, int col, int* values) {
+    int num_values = values[0];
     if (row >= 0 && row < grid->num_rows && col >= 0 && col < grid->num_cols) {
-        // Libérer la mémoire de l'ancien tableau dynamique (s'il existe)
-        if (grid->gridData[row][col] != NULL) {
-            free(grid->gridData[row][col]);
-        }
         // Allouer un nouveau tableau dynamique de la taille appropriée, en ajoutant 1 pour stocker la taille
-        int* new_values = (int*)malloc(sizeof(int) * (num_values + 1));
+        int new_num_values = num_values + 1;
+        int* new_values = (int*)malloc(sizeof(int) * (new_num_values + 1));
         // Stocker la taille du tableau dans la première case
-        new_values[0] = num_values;
+        new_values[0] = new_num_values;
         // Copier les valeurs dans le nouveau tableau
         for (int i = 0; i < num_values; i++) {
             new_values[i + 1] = values[i];
+        }
+        // Libérer la mémoire de l'ancien tableau dynamiquE
+        if (grid->gridData[row][col] != NULL) {
+            free(grid->gridData[row][col]);
         }
         // Affecter le nouveau tableau à la cellule de la grille
         grid->gridData[row][col] = new_values;
