@@ -150,9 +150,9 @@ void checkContactWithSphere(Context* context, int particle_id, SphereCollider* s
 void checkContactWithParticle(Context* context, int particle_id1, int particle_id2) {
   Particle particle1 = context->particles[particle_id1];
   Particle particle2 = context->particles[particle_id2];
-  Vec2 particle1_pos = particle1.position;
+  Vec2 particle1_pos = particle1.next_pos;
   float particle1_radius = particle1.radius;
-  Vec2 particle2_pos = particle2.position;
+  Vec2 particle2_pos = particle2.next_pos;
   float particle2_radius = particle2.radius;
 
   float particles_distance = norm(vecSubstract(particle1_pos, particle2_pos)) - particle1_radius - particle2_radius;
@@ -163,14 +163,14 @@ void checkContactWithParticle(Context* context, int particle_id1, int particle_i
     float inv_mass_ratio1 = inv_m1 / (inv_m1  + inv_m2);
     float inv_mass_ratio2 = inv_m2 / (inv_m1  + inv_m2);
     
-    Vec2 particle2_unit_normal = vecNormalize(vecSubstract(particle1_pos, particle2_pos));
+    Vec2 particle2_unit_normal = (vecSubstract(particle1_pos, particle2_pos));
     
 
     float particles_center_distance = norm(vecSubstract(particle1_pos, particle2_pos));    
-    Vec2 wrong_constraint = vecScale(particle2_unit_normal, - inv_mass_ratio1 * particles_distance * particles_center_distance * particles_center_distance);
-    // Vec2 constraint = vecScale(particle2_unit_normal, - inv_mass_ratio1 * particles_distance);
+    Vec2 constraint = vecScale(particle2_unit_normal, - inv_mass_ratio1 * particles_distance / particles_center_distance);
 
-    addParticleConstraint(context, wrong_constraint, particle_id1);
+
+    addParticleConstraint(context, constraint, particle_id1);
   }
 }
 

@@ -54,7 +54,7 @@ void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxat
 void applyExternalForce(Context* context, float dt);
 
 // Damps the velocities of particles in the context.
-void dampVelocities(Context* context);
+void dampVelocities(Context* context,  float dt);
 
 // Updates the expected positions of particles in the context based on their velocities.
 void updateExpectedPosition(Context* context, float dt);
