@@ -78,9 +78,9 @@ Context* initializeContext(int capacity) {
   context->num_boxes = num_boxes;
   context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
   
-  Vec2 directors_1[] = {{0.0f,1.0f} ,  {-4.5f,-0.3f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.3f} };
+  Vec2 directors_1[] = {{0.0f,1.0f} ,  {-4.5f,-0.5f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f},  {-4.5f,0.5f} };
   Vec2 directors_2[] = {{0.10f, 0.0f}, {0.0f, 0.2f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}};
-  Vec2 centers[] = {{-8.0f,-6.5f} , {6.0f, 5.5f}, {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f}, {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}, {-6.0f, 5.5f}};
+  Vec2 centers[] = {{-8.0f,-6.5f} , {6.5f, 5.5f}, {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f}, {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}, {-6.0f, 5.5f}};
   for (int i=0; i<num_boxes; i++) {
     context->box_collider[i].center = centers[i];
     context->box_collider[i].director1 = directors_1[i];
