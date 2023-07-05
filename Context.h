@@ -18,9 +18,11 @@ typedef struct Context {
   BoxCollider* box_collider;
 
   // Constraints
+
   GroundConstraint* ground_constraints;
   ParticleConstraint* particle_constraints;
   BoundConstraint* bound_constraints;
+
 } Context;
 
 // Initializes a new Context with the given capacity.
@@ -43,6 +45,7 @@ SphereCollider getGroundSphereCollider(Context* context, int id);
 
 // Retrieves the ground plane collider with the specified ID from the context.
 PlaneCollider getGroundPlaneCollider(Context* context, int id);
+
 
 // Updates the physical system in the context over a time step.
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation);

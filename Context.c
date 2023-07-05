@@ -8,6 +8,7 @@
 
 #define NUM_GROUND_PLANES 6
 #define NUM_GROUND_SPHERES 21
+#define NUM_BOXES 9
 
 Context* initializeContext(int capacity) {
   // Allocate memory for a Context structure
@@ -72,6 +73,22 @@ Context* initializeContext(int capacity) {
   // Initialize bound constraints
   context->bound_constraints = initializeBoundConstraint(capacity, capacity);
   
+   //initialize Boxes.
+  context->num_boxes = NUM_BOXES;
+  context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
+  
+  Vec2 directors_1[] = {{0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, 
+                        {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}};
+  Vec2 directors_2[] = {{0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f},
+                         {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, -0.2f}};
+  Vec2 centers[] = {{-8.0f,-6.5f} , {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f},
+                     {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}};
+  for (int i= 0 ; i<NUM_BOXES; i++) {
+    context->box_collider[i].center = centers[i];
+    context->box_collider[i].director1 = directors_1[i];
+    context->box_collider[i].director2 = directors_2[i];
+  }
+  
   // Return the initialized context
   return context;
 }
@@ -101,6 +118,7 @@ void addParticle(Context* context, float x, float y, float radius, float mass, i
   context->num_particles += 1;
 }
 
+
 int addParticleWithId(Context* context, float x, float y, float radius, float mass, int draw_id) {
   assert(context->num_particles < context->capacity_particles); // Check if the number of particles has reached the capacity
 
@@ -127,6 +145,10 @@ void setDrawId(Context* context, int sphere_id, int draw_id) {
 Particle getParticle(Context* context, int id) {
   return context->particles[id];
 }
+  
+  BoxCollider getBoxCollider(Context* context, int id) {
+  return context->box_collider[id];
+}
 
 SphereCollider getGroundSphereCollider(Context* context, int id) {
   return context->ground_spheres[id];
@@ -134,11 +156,6 @@ SphereCollider getGroundSphereCollider(Context* context, int id) {
 
 PlaneCollider getGroundPlaneCollider(Context* context, int id) {
   return context->ground_planes[id];
-}
-
-BoxCollider getBoxCollider(Context* context, int id)
-{
-  return context->box_collider[id];
 }
 
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation) {
@@ -169,8 +186,7 @@ void applyExternalForce(Context* context, float dt) {
   }
 }
 
-void dampVelocities(Context* context) {
-}
+void dampVelocities(Context* context) {}
 
 void updateExpectedPosition(Context* context, float dt) {
   for (int i = 0; i < context->num_particles; i++) {
@@ -208,6 +224,9 @@ void addStaticContactConstraints(Context* context) {
   for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
     for (int sphere_id = 0; sphere_id < context->num_ground_spheres; sphere_id++) {
       checkContactWithSphere(context, particle_id, &(context->ground_spheres[sphere_id])); // Check for contact between particle and ground sphere
+    }
+    for(int j=0; j < context->num_boxes; j++) {
+      checkContactWithBox(context, particle_id, j);
     }
   }
 }

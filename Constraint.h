@@ -35,6 +35,12 @@ typedef struct BoundConstraint {
   int capacity_constraints;
 } BoundConstraint;
 
+typedef struct BoxCollider {
+  Vec2 center;
+  Vec2 director1;
+  Vec2 director2;
+} BoxCollider;
+
 typedef struct GroundConstraint {
   int num_constraints;
   Constraint* constraints;
@@ -46,12 +52,6 @@ typedef struct ParticleConstraint {
   Constraint* constraints;
   int capacity_constraints;
 } ParticleConstraint;
-
-typedef struct BoxCollider {
-  Vec2 center;
-  Vec2 director1;
-  Vec2 director2;
-} BoxCollider;
 
 
 GroundConstraint* initializeGroundConstraint(int capacity);

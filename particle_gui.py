@@ -56,19 +56,9 @@ class PARTICLE_CONSTRAINT(Structure):
                 ("constraint", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints",c_int)]
 
-# Structure definition for the CONTEXT object
-class CONTEXT(Structure):
-    _fields_ = [("num_particles", c_int),
-                ("capacity_particles", c_int),
-                ("particles", ctypes.POINTER(PARTICLE)),
-                ("num_ground_sphere", c_int),
-                ("ground_spheres", ctypes.POINTER(SPHERE_COLLIDER)),
-                ("num_ground_plane", c_int),
-                ("ground_planes", ctypes.POINTER(PLANE_COLLIDER)),
-                ("ground_constraints", ctypes.POINTER(GROUND_CONSTRAINT)),
-                ("particle_constraints", ctypes.POINTER(PARTICLE_CONSTRAINT))]
 
 # Structure definition for the BOUNDS object
+
 class BOUNDS(Structure):
     _fields_ = [("particle1", c_int),
                 ("particle2", c_int),
@@ -83,12 +73,35 @@ class BOUND_CONSTRAINTS(Structure):
                 ("num_constraints", c_int),
                 ("constraints", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints", c_int)]
+    
+    
+class BOX_COLLIDER(Structure):
+    _fields_ = [("center", c_float*2),
+               ("director1", c_float*2),
+               ("director2", c_float*2)]
+    
+# Structure definition for the CONTEXT object
+class CONTEXT(Structure):
+    _fields_ = [("num_particles", c_int),
+                ("capacity_particles", c_int),
+                ("particles", ctypes.POINTER(PARTICLE)),
+                ("num_ground_sphere", c_int),
+                ("ground_spheres", ctypes.POINTER(SPHERE_COLLIDER)),
+                ("num_ground_plane", c_int),
+                ("ground_planes", ctypes.POINTER(PLANE_COLLIDER)),
+                ("num_boxes", c_int),
+                ("box_collider", ctypes.POINTER(BOX_COLLIDER)),
+                ("ground_constraints", ctypes.POINTER(GROUND_CONSTRAINT)),
+                ("particle_constraints", ctypes.POINTER(PARTICLE_CONSTRAINT)),
+                ("bounds_constraints", ctypes.POINTER(BOUND_CONSTRAINTS))]
+    
 
 # Declare proper return types for methods (otherwise considered as c_int)
 c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeContext is Context*
 c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
 c_lib.getGroundPlaneCollider.restype = PLANE_COLLIDER
+c_lib.getBoxCollider.restype = BOX_COLLIDER
 c_lib.initializeGroundConstraint.restype = POINTER(GROUND_CONSTRAINT)
 c_lib.initializeBoundConstraint.restype = POINTER(BOUND_CONSTRAINTS)
 c_lib.initializeParticleConstraint.restype = POINTER(PARTICLE_CONSTRAINT)
@@ -103,7 +116,7 @@ c_lib.initializeParticleConstraint.restype = POINTER(PARTICLE_CONSTRAINT)
 class ParticleUI :
     def __init__(self) :
         # create drawing context
-        self.context = c_lib.initializeContext(200)
+        self.context = c_lib.initializeContext(300)
         self.ground_constraint = c_lib.initializeGroundConstraint(300)
         self.particle_constraint = c_lib.initializeParticleConstraint(300)
         self.bounds_constraint = c_lib.initializeBoundConstraint(300)
@@ -136,6 +149,16 @@ class ParticleUI :
             draw_id = self.canvas.create_oval(*self.worldToView( (sphere.center[0]-sphere.radius,sphere.center[1]-sphere.radius) ),
                                               *self.worldToView( (sphere.center[0]+sphere.radius,sphere.center[1]+sphere.radius) ),
                                               fill="blue") 
+
+        for i in range(self.context.contents.num_boxes):
+            box = c_lib.getBoxCollider(self.context, i)
+            points = []
+            points.append([*self.worldToView((box.center[0] + box.director1[0] + box.director2[0], box.center[1] + box.director1[1] + box.director2[1]))])
+            points.append([*self.worldToView((box.center[0] + box.director1[0] - box.director2[0], box.center[1] + box.director1[1] - box.director2[1]))])
+            points.append([*self.worldToView((box.center[0] - box.director1[0] - box.director2[0], box.center[1] - box.director1[1] - box.director2[1]))])
+            points.append([*self.worldToView((box.center[0] - box.director1[0] + box.director2[0], box.center[1] - box.director1[1] + box.director2[1]))])
+            draw_id = self.canvas.create_polygon(points, outline="black", fill="green")
+            c_lib.setDrawId(self.context, i, draw_id) 
 
         # otherwise, see addParticle
         for i in range(self.context.contents.num_particles):
