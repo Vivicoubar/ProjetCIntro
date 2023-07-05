@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Vec2.h"
-#include "IntArrayGrid.h"
 #include "Particle.h"
 #include "Constraint.h"
+#include "IntArrayGrid.h"
 
 typedef struct Context {
   int num_particles;
@@ -39,6 +39,7 @@ void applyExternalForce(Context* context, float dt);
 void dampVelocities(Context* context);
 void updateExpectedPosition(Context* context, float dt);
 void addDynamicContactConstraints(Context* context);
+void useGridCheckContactWithParticle(Context* context); // fct en cours d'implementation
 void addStaticContactConstraints(Context* context);
 void projectConstraints(Context* context);
 void updateVelocityAndPosition(Context* context, float dt);

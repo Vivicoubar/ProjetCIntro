@@ -1,6 +1,7 @@
 #include "IntArrayGrid.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 IntArrayGrid* createGrid(float len_x, float len_y, float cell_size) {
     IntArrayGrid* grid = (IntArrayGrid*)malloc(sizeof(IntArrayGrid));
@@ -17,7 +18,6 @@ IntArrayGrid* createGrid(float len_x, float len_y, float cell_size) {
             grid->gridData[i][j] = NULL;
         }
     }
-    
     return grid;
 }
 
@@ -39,6 +39,10 @@ void destroyGrid(IntArrayGrid* grid) {
 void setCellValues(IntArrayGrid* grid, int row, int col, int* values) {
     int num_values = values[0];
     if (row >= 0 && row < grid->num_rows && col >= 0 && col < grid->num_cols) {
+        // Libérer la mémoire de l'ancien tableau dynamique (si il existe)
+        if (grid->gridData[row][col] != NULL) {
+            free(grid->gridData[row][col]);
+        }
         // Allouer un nouveau tableau dynamique de la taille appropriée, en ajoutant 1 pour stocker la taille
         int new_num_values = num_values + 1;
         int* new_values = (int*)malloc(sizeof(int) * (new_num_values + 1));
@@ -48,14 +52,23 @@ void setCellValues(IntArrayGrid* grid, int row, int col, int* values) {
         for (int i = 0; i < num_values; i++) {
             new_values[i + 1] = values[i];
         }
-        // Libérer la mémoire de l'ancien tableau dynamiquE
-        if (grid->gridData[row][col] != NULL) {
-            free(grid->gridData[row][col]);
-        }
         // Affecter le nouveau tableau à la cellule de la grille
         grid->gridData[row][col] = new_values;
     }
 }
+
+void addCellValue(IntArrayGrid* grid, int row, int col, int value) {
+    if (row >= 0 && row < grid->num_rows && col >= 0 && col < grid->num_cols) {
+        int* cell_values = grid->gridData[row][col];
+        int num_values = getNumCellValues(grid, row, col);
+        
+        int* new_values = (int*)realloc(cell_values, sizeof(int) * (num_values + 2));
+        new_values[num_values] = value;
+        new_values[0] = num_values + 1;
+        grid->gridData[row][col] = new_values;
+    }
+}
+
 
 int* getCellValues(IntArrayGrid* grid, int row, int col) {
     if (row >= 0 && row < grid->num_rows && col >= 0 && col < grid->num_cols) {
@@ -74,3 +87,14 @@ int getNumCellValues(IntArrayGrid* grid, int row, int col) {
     return 0;
 }
 
+void printGrid(IntArrayGrid* grid) {
+    for (int row = 0; row < grid->num_rows; row++) {
+        for (int col = 0; col < grid->num_cols; col++) {
+            int* cell_values = grid->gridData[row][col];
+            int num_values = getNumCellValues(grid, row, col);
+            printf("[%d]", num_values);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
