@@ -19,10 +19,10 @@ Context* initializeContext(int capacity) {
   //initialize planes
   context->num_ground_planes = NUM_GROUND_PLANES;
   context->ground_planes = malloc(context->num_ground_planes * sizeof(PlaneCollider));
-  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{9.5F, -7.5F}, {-11.5F, -5.5F}, {11.5F, 7.5F}, {-11.5F, 7.5F},
-                                              {-9.5F, -7.5F}, {11.5F, -5.5F}};
-  Vec2 director_planes[NUM_GROUND_PLANES]  = {{-19.F, 0.F}, {0.F, 13.F}, {0.F, -13.F},
-                                              {23.F, 0.F}, {-2.0F, 2.F}, {-2.F, -2.F}};
+  Vec2 start_pos_planes[NUM_GROUND_PLANES] = {{-9.5F, -7.5F}, {-11.5F, 7.5F}, {11.5F, -5.5F}, 
+                                              {11.5F, 7.5F}, {-11.5F, -5.5F}, {9.5F, -7.5F}};
+  Vec2 director_planes[NUM_GROUND_PLANES]  = {{19.F, 0.F}, {0.F, -13.F}, {0.F, 13.F},
+                                              {-23.F, 0.F}, {2.F, -2.F}, {2.F, 2.F}};
   for (int i = 0; i < context->num_ground_planes; i++) {
     context->ground_planes[i].start_pos = start_pos_planes[i];
     context->ground_planes[i].director = director_planes[i];
@@ -54,28 +54,37 @@ Context* initializeContext(int capacity) {
 }
 
 void addParticle(Context* context, float x, float y, float radius, float mass, int draw_id) {
-    assert(context->num_particles<context->capacity_particles); // currently no resize in context
-    context->particles[context->num_particles].position.x = x;
-    context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.F;
-    context->particles[context->num_particles].velocity.y = 0.F;
-    context->particles[context->num_particles].inv_mass = 1.F/mass;
-    context->particles[context->num_particles].radius = radius;
-    context->particles[context->num_particles].draw_id = draw_id;
-    context->num_particles += 1;
+  assert(context->num_particles < context->capacity_particles); // currently no resize in context
+  
+  //TODO Choisir entre augmenter le nombre de particules ou fermer volontairement la fenetre en liberant la memoire
+
+  // if (context->num_particles >= context->capacity_particles) {
+  //     printf("Erreur : capacite maximale de particules atteinte\n");
+  //     free_memory(context);
+  //     exit(0);
+  // }
+
+  context->particles[context->num_particles].position.x = x;
+  context->particles[context->num_particles].position.y = y;
+  context->particles[context->num_particles].velocity.x = 0.F;
+  context->particles[context->num_particles].velocity.y = 0.F;
+  context->particles[context->num_particles].inv_mass = 1.F/mass;
+  context->particles[context->num_particles].radius = radius;
+  context->particles[context->num_particles].draw_id = draw_id;
+  context->num_particles += 1;
 }
 
 int addParticleWithId(Context* context, float x, float y, float radius, float mass, int draw_id) {
-    assert(context->num_particles<context->capacity_particles); // currently no resize in context
-    context->particles[context->num_particles].position.x = x;
-    context->particles[context->num_particles].position.y = y;
-    context->particles[context->num_particles].velocity.x = 0.F;
-    context->particles[context->num_particles].velocity.y = 0.F;
-    context->particles[context->num_particles].inv_mass = 1.F/mass;
-    context->particles[context->num_particles].radius = radius;
-    context->particles[context->num_particles].draw_id = draw_id;
-    context->num_particles += 1;
-    return context->num_particles -1;
+  assert(context->num_particles < context->capacity_particles); // currently no resize in context
+  context->particles[context->num_particles].position.x = x;
+  context->particles[context->num_particles].position.y = y;
+  context->particles[context->num_particles].velocity.x = 0.F;
+  context->particles[context->num_particles].velocity.y = 0.F;
+  context->particles[context->num_particles].inv_mass = 1.F/mass;
+  context->particles[context->num_particles].radius = radius;
+  context->particles[context->num_particles].draw_id = draw_id;
+  context->num_particles += 1;
+  return context->num_particles -1;
 }
 
 void setDrawId(Context* context, int sphere_id, int draw_id) {
@@ -137,15 +146,10 @@ void updateExpectedPosition(Context* context, float dt) {
 }
 
 void addDynamicContactConstraints(Context* context) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
   for (int particle1_id = 0; particle1_id < context->num_particles; particle1_id++) {
     for (int particle2_id = 0; particle2_id < context->num_particles; particle2_id++) {
-        // In order to optimize the code, calculate the distance between two particles. If bigger than sum of radius, skip
-        if (particle1_id != particle2_id) {
-        Vec2 vector = vecSubstract(context->particles[particle1_id].position, context->particles[particle2_id].position);
-        if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle1_id].radius + context->particles[particle2_id].radius)) {
-          checkContactWithParticle(context, particle1_id, particle2_id);
-        }
+      if (particle1_id != particle2_id) {
+        checkContactWithParticle(context, particle1_id, particle2_id);
       }
     }
   }
@@ -155,22 +159,12 @@ void addDynamicContactConstraints(Context* context) {
 }
 
 void addStaticContactConstraints(Context* context) {
-  //TODO : Passer par des pointeurs intermédiaires pour améliorer la compréhension
   for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
     for(int plane_id = 0; plane_id < context->num_ground_planes; plane_id++) {
-      // In order to optimize the code, calculate the orthogonal projection. If bigger than radius, skip
-      Vec2 normal = {context->ground_planes[plane_id].director.y, -context->ground_planes[plane_id].director.x};
-      Vec2 vector = {context->particles[particle_id].position.x - context->ground_planes[plane_id].start_pos.x, context->particles[particle_id].position.y - context->ground_planes[plane_id].start_pos.y};
-      if(abs(dotProduct(normal, vector)) / (sqrt(dotProduct(normal, normal))) <= context->particles[particle_id].radius) {
         checkContactWithPlane(context, particle_id, &(context->ground_planes[plane_id]));
-      }
     }
     for(int sphere_id = 0; sphere_id < context->num_ground_spheres; sphere_id++) {
-      // In order to optimize the code, calculate the distance between the sphere and the particle. If bigger than sum of radius, skip
-      Vec2 vector = vecSubstract(context->particles[particle_id].position, context->ground_spheres[sphere_id].center);
-      if(sqrt(dotProduct(vector, vector)) <= (context->particles[particle_id].radius + context->ground_spheres[sphere_id].radius)) {
-        checkContactWithSphere(context, particle_id, &(context->ground_spheres[sphere_id]));
-      }
+      checkContactWithSphere(context, particle_id, &(context->ground_spheres[sphere_id]));
     }
   }
 }
@@ -207,9 +201,9 @@ void updateVelocityAndPosition(Context* context, float dt) {
 }
 
 void applyFriction(Context* context, float dt) {
+  float friction_coef = 0.6F;
   for(int i = 0; i < context->num_particles; i++) {
-    //Apply a constraint for the friction
-    context->particles[i].velocity = vecScale(context->particles[i].velocity, (1.F - 0.6F * context->particles[i].inv_mass * dt));
+    context->particles[i].velocity = vecScale(context->particles[i].velocity, 1.F - friction_coef * context->particles[i].inv_mass * dt);
   }
 }
 
@@ -219,10 +213,6 @@ void deleteContactConstraints(Context* context) {
   context->particle_constraints->num_constraints = 0;
   context->bound_constraints->num_constraints = 0;
 }
-
-
-
-////////////////////////////////////////////////////
 
 
 void createGaltonBox(Context* context, Vec2 start_pos, int lines, int sphere_num) {
@@ -254,5 +244,31 @@ void createLineColliders(Context* context, Vec2 * start_pos, int length, int sph
   }
 }
 
+void free_array(void* array) {
+    if (array != NULL) {
+      free(array);
+      array = NULL;
+    }
+}
 
 
+
+void free_memory(Context* context) {
+  // A faire en premier
+  free_array(context->bound_constraints->bounds);
+  free_array(context->bound_constraints->constraints);
+  free_array(context->ground_constraints->constraints);
+  free_array(context->particle_constraints->constraints);
+
+  // A faire apres
+  free_array(context->particles);
+  free_array(context->ground_spheres);
+  free_array(context->ground_planes);
+  free_array(context->ground_constraints);
+  free_array(context->particle_constraints);
+  free_array(context->bound_constraints);
+
+  // A faire en dernier
+  free_array(context);
+
+}

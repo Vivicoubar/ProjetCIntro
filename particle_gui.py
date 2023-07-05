@@ -151,7 +151,8 @@ class ParticleUI :
         self.canvas.bind("<Button-1>", lambda event: self.mouseCallback(event))
         self.canvas.bind("<Button-3>", lambda event: self.mouseCallback2(event))
         self.window.bind("<Key>", lambda event: self.keyCallback(event)) # bind all key
-        self.window.bind("<Escape>", lambda event: self.enterCallback(event)) 
+        self.window.bind("<Escape>", lambda event: self.enterCallback(event))
+        self.window.bind("<Destroy>", lambda event: self.destroyCallback(event))
         # bind specific key overide default binding
 
     def launchSimulation(self) :
@@ -209,19 +210,7 @@ class ParticleUI :
                         c_float(radius), c_float(mass),
                         draw_id1, draw_id2, draw_id3, draw_id4)
 
-    # All mouse and key callbacks
-    def mouseCallback(self, event):
-        self.addParticle((event.x,event.y), 0.2, 1.0)
-    
-    def mouseCallback2(self, event):
-        self.addParticleWithBound((event.x,event.y), 0.2, 1.0)
-    
-    def keyCallback(self, event):
-        print(repr(event.char))
-    
-    def enterCallback(self, event):
-        self.window.destroy()
-
+    # Fonctions pour créer la grille en fond
     def createGrid(self, cell_size, color):
         num_rows = int(2 * self.world_y_max / cell_size)
         num_cols = int(2 * self.world_x_max / cell_size)
@@ -265,6 +254,22 @@ class ParticleUI :
         self.createGrid(subdivision_size, 'light gray')
         self.createGrid(cell_size, 'dark gray')
         self.createAxisLabels()
+
+    # All mouse and key callbacks
+    def mouseCallback(self, event):
+        self.addParticle((event.x,event.y), 0.2, 1.0)
+    
+    def mouseCallback2(self, event):
+        self.addParticleWithBound((event.x,event.y), 0.2, 1.0)
+    
+    def keyCallback(self, event):
+        print(repr(event.char))
+    
+    def enterCallback(self, event):
+        self.window.destroy()
+
+    def destroyCallback(self, event):
+        c_lib.free_memory(self.context)
 
 
 gui = ParticleUI()
