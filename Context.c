@@ -7,8 +7,8 @@
 #include <math.h>
 
 #define NUM_GROUND_PLANES 6
-#define NUM_GROUND_SPHERES 21
-#define NUM_BOXES 9
+#define NUM_GROUND_SPHERES 28
+#define NUM_BOXES 11
 
 Context* initializeContext(int capacity) {
   // Allocate memory for a Context structure
@@ -44,25 +44,8 @@ Context* initializeContext(int capacity) {
   context->num_ground_spheres = NUM_GROUND_SPHERES;
   context->ground_spheres = malloc(context->num_ground_spheres * sizeof(SphereCollider));
 
-  // Define the center positions and radii of the ground spheres
-  Vec2 center_spheres[NUM_GROUND_SPHERES] = {{5.5F, 0.F}};
-  float radius_spheres[NUM_GROUND_SPHERES] = {2.5F};
-  int num_spheres_placed = 1;
-
-  // Place additional spheres in a grid pattern
-  for (int i = 0; i < 5 ; i++) {
-    for (int j = 0; j < 4 ; j++) {
-      center_spheres[num_spheres_placed] = (Vec2){-10.F + 2.F * (float) i + 1.F * (float) (j % 2), -2.F + 1.5F * (float) j};
-      radius_spheres[num_spheres_placed] = 0.25F;
-      num_spheres_placed++;
-    }
-  }
-
-  // Assign center positions and radii to the ground spheres
-  for (int i = 0; i < context->num_ground_spheres; i++) {
-    context->ground_spheres[i].center = center_spheres[i];
-    context->ground_spheres[i].radius = radius_spheres[i];
-  }
+  // Place a Galton Box
+  createGaltonBox(context, (Vec2){0.0f,3.0f}, 7, 0);
   
   // Initialize ground constraints
   context->ground_constraints = initializeGroundConstraint(capacity);
@@ -78,17 +61,18 @@ Context* initializeContext(int capacity) {
   context->box_collider = malloc(context->num_boxes*sizeof(BoxCollider));
   
   Vec2 directors_1[] = {{0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, 
-                        {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}};
+                        {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {0.0f,1.0f}, {5.0f, 0.0f}, {5.0f, 0.0f}};
   Vec2 directors_2[] = {{0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f},
-                         {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, -0.2f}};
+                         {0.1f, 0.0f}, {0.1f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.2f}, {0.0f, 0.2f}};
   Vec2 centers[] = {{-8.0f,-6.5f} , {-6.0f,-6.5f}, {-4.0f,-6.5f}, {-2.0f,-6.5f}, {-0.0f,-6.5f},
-                     {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}};
+                     {2.0f,-6.5f}, {4.0f,-6.5f}, {6.0f,-6.5f}, {8.0f,-6.5f}, {-6.5f,5.0f}, {6.5f,5.0f}};
   for (int i= 0 ; i<NUM_BOXES; i++) {
     context->box_collider[i].center = centers[i];
     context->box_collider[i].director1 = directors_1[i];
     context->box_collider[i].director2 = directors_2[i];
   }
   
+
   // Return the initialized context
   return context;
 }
