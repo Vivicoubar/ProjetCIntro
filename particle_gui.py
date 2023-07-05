@@ -153,10 +153,10 @@ class ParticleUI :
         for i in range(self.context.contents.num_boxes):
             box = c_lib.getBoxCollider(self.context, i)
             points = []
+            points.append([*self.worldToView((box.center[0] + box.director1[0] + box.director2[0], box.center[1] + box.director1[1] + box.director2[1]))])
             points.append([*self.worldToView((box.center[0] + box.director1[0] - box.director2[0], box.center[1] + box.director1[1] - box.director2[1]))])
             points.append([*self.worldToView((box.center[0] - box.director1[0] - box.director2[0], box.center[1] - box.director1[1] - box.director2[1]))])
             points.append([*self.worldToView((box.center[0] - box.director1[0] + box.director2[0], box.center[1] - box.director1[1] + box.director2[1]))])
-            points.append([*self.worldToView((box.center[0] + box.director1[0] + box.director2[0], box.center[1] + box.director1[1] + box.director2[1]))])
             draw_id = self.canvas.create_polygon(points, outline="black", fill="green")
             c_lib.setDrawId(self.context, i, draw_id) 
 

@@ -208,8 +208,8 @@ void checkContactWithBox(Context* context, int particle_id, int box_id) {
   Vec2 center = context->box_collider[box_id].center;
 
   // Calculate half width and half height of the box
-  float half_width = norm(director2) / 2.0f;
-  float half_height = norm(director1) / 2.0f;
+  float half_width = norm(director1) / 2.0f;
+  float half_height = norm(director2) / 2.0f;
 
   // Get particle radius and position
   float particle_radius = context->particles[particle_id].radius;
@@ -223,10 +223,9 @@ void checkContactWithBox(Context* context, int particle_id, int box_id) {
   float proj_center_2 = center.x * vecNormalize(director1).y + center.y * vecNormalize(director2).y;
 
   // Calculate the distances between particle and box edges
-  float d1 = fabs(proj_1 - proj_center_1) - (2 * half_height + particle_radius);
-  float d2 = fabs(proj_2 - proj_center_2) - (2 * half_width + particle_radius);
-  
-  if (d1 <= 0.0f && d2 <= 0.0f) {
+  float d1 = fabs(proj_1 - proj_center_1) - (particle_radius + 2*half_width);
+  float d2 = fabs(proj_2 - proj_center_2) - (particle_radius + 2*half_height);
+  if (d1 < 0.0f && d2 < 0.0f) {
     //Calculate the constraint vector:
     float constraint_1 = 0.0f;
     float constraint_2 = 0.0f;
@@ -252,7 +251,6 @@ void checkContactWithBox(Context* context, int particle_id, int box_id) {
         constraint_2 = -d2;
       }
     }
-
     // Apply the constraint vector to move the particle outside the box
     Vec2 proj_total_constraint = { constraint_1, constraint_2 };
     // Calculate the projection of `proj_total_constraint` onto the base (x, y)
