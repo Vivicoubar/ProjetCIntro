@@ -19,6 +19,7 @@ c_lib = ctypes.CDLL(libname)
 
 # Define python equivalent class
 
+# Structure definition for the PARTICLE object
 class PARTICLE(Structure):
     _fields_ = [("position", c_float*2),
                 ("next_pos", c_float*2),
@@ -28,34 +29,34 @@ class PARTICLE(Structure):
                 ("solid_id", c_int),
                 ("draw_id",  c_int)]
 
-
+# Structure definition for the SPHERE_COLLIDER object
 class SPHERE_COLLIDER(Structure):
     _fields_ = [("center",c_float*2),
                 ("radius", c_float)]
 
-
+# Structure definition for the CONSTRAINT object
 class CONSTRAINT(Structure):
     _fields_ = [("constraint", c_float*2),
                 ("origin",c_int)]
 
-
+# Structure definition for the PLANE_COLLIDER object
 class PLANE_COLLIDER(Structure):
     _fields_ = [("start_pos", c_float*2),
                ("director", c_float*2)]
 
-
+# Structure definition for the GROUND_CONSTRAINT object
 class GROUND_CONSTRAINT(Structure):
     _fields_ = [("num_constraint", c_int),
                 ("constraint", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints",c_int)]
 
-
+# Structure definition for the PARTICLE_CONSTRAINT object
 class PARTICLE_CONSTRAINT(Structure):
     _fields_ = [("num_constraint", c_int),
                 ("constraint", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints",c_int)]
 
-
+# Structure definition for the CONTEXT object
 class CONTEXT(Structure):
     _fields_ = [("num_particles", c_int),
                 ("capacity_particles", c_int),
@@ -67,14 +68,14 @@ class CONTEXT(Structure):
                 ("ground_constraints", ctypes.POINTER(GROUND_CONSTRAINT)),
                 ("particle_constraints", ctypes.POINTER(PARTICLE_CONSTRAINT))]
 
-  
+# Structure definition for the BOUNDS object
 class BOUNDS(Structure):
     _fields_ = [("particle1", c_int),
                 ("particle2", c_int),
                 ("target_distance", c_float),
                 ("stiffness", c_float)]
 
-
+# Structure definition for the BOUND_CONSTRAINTS object
 class BOUND_CONSTRAINTS(Structure):
     _fields_ = [("num_bounds", c_int),
                 ("bounds", ctypes.POINTER(BOUNDS)),
@@ -83,10 +84,7 @@ class BOUND_CONSTRAINTS(Structure):
                 ("constraints", ctypes.POINTER(CONSTRAINT)),
                 ("capacity_constraints", c_int)]
 
-
-# ("pos", c_float*2) => fixed size array of two float
-
-# Declare proper return types for methods (otherwise co54nsidered as c_int)
+# Declare proper return types for methods (otherwise considered as c_int)
 c_lib.initializeContext.restype = POINTER(CONTEXT) # return type of initializeContext is Context*
 c_lib.getParticle.restype = PARTICLE
 c_lib.getGroundSphereCollider.restype = SPHERE_COLLIDER
@@ -132,7 +130,7 @@ class ParticleUI :
             x1 ,y1= x0+plane.director[0], y0+plane.director[1]
             draw_id = self.canvas.create_line(*self.worldToView( (x0,y0) ), *self.worldToView( (x1,y1) ),
                                               fill="black", width=3) 
-        
+         # Create sphere colliders
         for i in range(self.context.contents.num_ground_sphere):
             sphere = c_lib.getGroundSphereCollider(self.context, i)
             draw_id = self.canvas.create_oval(*self.worldToView( (sphere.center[0]-sphere.radius,sphere.center[1]-sphere.radius) ),
@@ -166,7 +164,7 @@ class ParticleUI :
         # APPLY PHYSICAL UPDATES HERE !
         for i in range(6) :
             c_lib.updatePhysicalSystem(self.context, c_float(0.016/float(6)), 1)
-            
+        # Draw particles
         for i in range(self.context.contents.num_particles):
             sphere = c_lib.getParticle(self.context, i)
             self.canvas.coords(sphere.draw_id,

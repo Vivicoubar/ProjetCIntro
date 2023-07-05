@@ -217,18 +217,23 @@ void checkBoundConstraint(Context* context, int bound_id) {
 
 
 void checkContactWithBox(Context* context, int particle_id, int box_id) {
-  Vec2 director1 = (context->box_collider[box_id].director1);
-  Vec2 director2 = (context->box_collider[box_id].director2);
+  // Get the directors and center of the box collider
+  Vec2 director1 = context->box_collider[box_id].director1;
+  Vec2 director2 = context->box_collider[box_id].director2;
   Vec2 center = context->box_collider[box_id].center;
 
+  // Calculate half width and half height of the box
   float half_width = norm(director2) / 2.0f;
   float half_height = norm(director1) / 2.0f;
+
+  // Get particle radius and position
   float particle_radius = context->particles[particle_id].radius;
   float particle_x = context->particles[particle_id].next_pos.x;
   float particle_y = context->particles[particle_id].next_pos.y;
 
-  float dx = fabs(particle_x - center.x) - (2*half_width + particle_radius);
-  float dy = fabs(particle_y - center.y) - (2*half_height + particle_radius);
+  // Calculate the distances between particle and box edges
+  float dx = fabs(particle_x - center.x) - (2 * half_width + particle_radius);
+  float dy = fabs(particle_y - center.y) - (2 * half_height + particle_radius);
 
   // Check if the particle is colliding with the box
   if (dx <= 0.0f && dy <= 0.0f) {
@@ -237,23 +242,28 @@ void checkContactWithBox(Context* context, int particle_id, int box_id) {
     float constraint_y = 0.0f;
 
     if (dx > dy) {
-      if (particle_x < center.x) {
-        constraint_x = +dx;
-      }
-      else {
-        constraint_x = -dx;
-      }
-      constraint_y = 0.0f;
-    }
-    else {
-      constraint_x = 0.0f;
-      if (particle_y < center.y) {
-        constraint_y = dy;
-      }
-      else {
-        constraint_y = -dy;
-      }
-    }
+  // If the collision is primarily in the x-direction
+  if (particle_x < center.x) {
+    // If the particle is to the left of the box center, move it to the right
+    constraint_x = +dx;
+  }
+  else {
+    // If the particle is to the right of the box center, move it to the left
+    constraint_x = -dx;
+  }
+}
+else {
+  // If the collision is primarily in the y-direction
+  if (particle_y < center.y) {
+    // If the particle is above the box center, move it downward
+    constraint_y = dy;
+  }
+  else {
+    // If the particle is below the box center, move it upward
+    constraint_y = -dy;
+  }
+}
+
 
     // Apply the constraint vector to move the particle outside the box
     Vec2 total_constraint = { constraint_x, constraint_y };
