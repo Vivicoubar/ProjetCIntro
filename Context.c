@@ -160,7 +160,7 @@ PlaneCollider getGroundPlaneCollider(Context* context, int id) {
 
 void updatePhysicalSystem(Context* context, float dt, int num_constraint_relaxation) {
   applyExternalForce(context, dt);
-  dampVelocities(context);
+  dampVelocities(context, dt);
   updateExpectedPosition(context, dt);
   addDynamicContactConstraints(context);
   addStaticContactConstraints(context);
@@ -186,7 +186,16 @@ void applyExternalForce(Context* context, float dt) {
   }
 }
 
-void dampVelocities(Context* context) {}
+void dampVelocities(Context* context, float dt) {
+
+  for(int i = 0; i < context->num_particles; i++) {
+    if(norm(context->particles[i].velocity) > 50000 * 2*context->particles[i].radius * dt) {
+      float factor =  2*context->particles[i].radius * dt / norm(context->particles[i].velocity);
+      context->particles[i].velocity = vecScale(context->particles[i].velocity, factor);
+    }
+  }
+
+}
 
 void updateExpectedPosition(Context* context, float dt) {
   for (int i = 0; i < context->num_particles; i++) {
