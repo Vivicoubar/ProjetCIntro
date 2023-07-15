@@ -42,7 +42,8 @@ Context* initializeContext(int capacity) {
   context->ground_constraints = initializeGroundConstraint(capacity);
   context->particle_constraints = initializeParticleConstraint(capacity);
   context->bound_constraints = initializeBoundConstraint(capacity, capacity);
-  
+  context->collisions_grid = initializeCollisionsGrid(24.F , 16.F, 0.4F);
+
   return context;
 }
 
@@ -134,68 +135,10 @@ void updateExpectedPosition(Context* context, float dt) {
 }
 
 void addDynamicContactConstraints(Context* context) {
-  // for (int particle1_id = 0; particle1_id < context->num_particles; particle1_id++) {
-  //   for (int particle2_id = 0; particle2_id < context->num_particles; particle2_id++) {
-  //     if (particle1_id != particle2_id) {
-  //       checkContactWithParticle(context, particle1_id, particle2_id);
-  //     }
-  //   }
-  // }
-  useGridCheckContactWithParticle(context);
+  checkParticlesCollisions(context);
   for(int bound_id = 0; bound_id < context->bound_constraints->num_bounds; bound_id++) {
     checkBoundConstraint(context, bound_id);
   }
-}
-
-void useGridCheckContactWithParticle(Context* context) {
-  // Crer la grille
-  IntArrayGrid* grid;
-  float cell_size = 1.F;
-  float len_x = 12.F + 2.F * cell_size;
-  float len_y = 8.F + 2.F * cell_size;
-  grid = createGrid(len_x, len_y, cell_size);
-  
-  // Ajouter les particules dans la grille
-  for (int particle_id = 0; particle_id < context->num_particles; particle_id++) {
-    Particle* particle = &context->particles[particle_id];
-    Vec2 particle_pos = particle->next_pos;
-    //TODO Corriger les 2 lignes qui suivent
-    int particle_col = (int) ((grid->len_x / 2.F + particle_pos.x) / grid->cell_size);
-    int particle_row = (int) ((grid->len_y / 2.F + particle_pos.y) / grid->cell_size);   
-    printf("id:%d, col:%d, row:%d\n", particle_id, particle_col, particle_row);
-    addCellValue(grid, particle_row, particle_col, particle_id);
-  }
-  printf("\n");
-  // printGrid(grid);
-
-  // Parcourir la grille sans parcourir les bords
-
-  // for (int x = 1; x < grid->num_rows - 1; x++) {
-  //   for (int y = 1; y < grid->num_cols - 1; y++) {
-  //     int* cell = getCellValues(grid, x, y);
-  //     int num_cell_values = getNumCellValues(grid, x, y);
-
-  //     // Parcourir les cases autours
-  //     for (int dx = -1; dx <= 1; dx++) {
-  //       for (int dy = -1; dy <= 1; dy++) {
-  //         int* other_cell = getCellValues(grid, x + dx, y + dy);
-  //         int num_other_cell_values = getNumCellValues(grid, x + dx, y + dy);
-  //         // Checker les collisions
-  //         for (int cell_index = 1; cell_index <= num_cell_values; cell_index++) {
-  //           for (int other_cell_index = 1; other_cell_index <= num_other_cell_values; other_cell_index++) {
-  //             int particle1_id = cell[cell_index];
-  //             int particle2_id = other_cell[other_cell_index];
-  //             printf("%d, %d\n", particle1_id, particle2_id);
-  //             if (particle1_id != particle2_id) {
-  //               checkContactWithParticle(context, particle1_id, particle2_id);
-  //             }
-  //           }
-  //         }
-  //       }
-  //     } 
-  //   }
-  // }
-  destroyGrid(grid);
 }
 
 void addStaticContactConstraints(Context* context) {
@@ -260,8 +203,6 @@ void free_array(void* array) {
     }
 }
 
-
-
 void free_memory(Context* context) {
   // A faire en premier
   free_array(context->bound_constraints->bounds);
@@ -276,6 +217,8 @@ void free_memory(Context* context) {
   free_array(context->ground_constraints);
   free_array(context->particle_constraints);
   free_array(context->bound_constraints);
+
+  destroyGrid(context->collisions_grid);
 
   // A faire en dernier
   free_array(context);

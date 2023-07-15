@@ -4,6 +4,7 @@
 #include "Particle.h"
 #include "Constraint.h"
 #include "IntArrayGrid.h"
+#include "CollisionsGrid.h"
 
 typedef struct Context {
   int num_particles;
@@ -20,6 +21,7 @@ typedef struct Context {
   GroundConstraint* ground_constraints;
   ParticleConstraint* particle_constraints;
   BoundConstraint* bound_constraints;
+  IntArrayGrid* collisions_grid;
 } Context;
 
 Context* initializeContext(int capacity);
@@ -39,7 +41,6 @@ void applyExternalForce(Context* context, float dt);
 void dampVelocities(Context* context);
 void updateExpectedPosition(Context* context, float dt);
 void addDynamicContactConstraints(Context* context);
-void useGridCheckContactWithParticle(Context* context); // fct en cours d'implementation
 void addStaticContactConstraints(Context* context);
 void projectConstraints(Context* context);
 void updateVelocityAndPosition(Context* context, float dt);
